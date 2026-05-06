@@ -15,7 +15,7 @@ fluidfortune.com
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pisces Moon OS — Web Demo</title>
+<title>Pisces Moon OS — v1.1 Web Demo</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
 :root{
@@ -677,7 +677,7 @@ body::before{
         <div class="about-w">
           <div class="about-logo">PISCES MOON</div>
           <div class="about-sub">OPERATING SYSTEM</div>
-          <div class="about-ver">Version 1.0.0 "The Arsenal"</div>
+          <div class="about-ver">Version 1.1.0 "ELF Treaty"</div>
           <div class="about-hw">LilyGO T-Deck Plus · ESP32-S3 · 240MHz</div>
           <div class="about-hw">8MB PSRAM · 16MB Flash · 320×240 IPS</div>
           <div class="about-hw">WiFi · BLE 5.0 · LoRa SX1262 · GPS</div>
@@ -727,7 +727,7 @@ body::before{
 // ── CONSTANTS ───────────────────────────────────────────
 const KEY_LS = 'pm_gemini_key';
 const GEMINI  = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-const SYS_PROMPT = `You are the Gemini AI terminal running inside Pisces Moon OS v1.0.0 "The Arsenal" — a cyberpunk operating system for the LilyGO T-Deck Plus (ESP32-S3, 8MB PSRAM, 320x240 display, LoRa, GPS, BLE). Be concise — the screen is tiny. Max 3-4 sentences unless asked for more. Stay in character as an embedded AI assistant. You can discuss the OS, embedded systems, ESP32 development, security research, wardriving, LoRa, or anything else.`;
+const SYS_PROMPT = `You are the Gemini AI terminal running inside Pisces Moon OS v1.1.0 "ELF Treaty" — a cyberpunk operating system for the LilyGO T-Deck Plus (ESP32-S3, 8MB PSRAM, 320x240 display, LoRa, GPS, BLE). Be concise — the screen is tiny. Max 3-4 sentences unless asked for more. Stay in character as an embedded AI assistant. You can discuss the OS, embedded systems, ESP32 development, security research, wardriving, LoRa, or anything else.`;
 
 const CATS = [
   {name:'COMMS',cls:'comms',icon:'📡',color:'#00d4ff',
@@ -757,7 +757,7 @@ const SSIDS = [
 
 const DEMO_RESP = [
   {k:['hello','hi','hey'],
-   r:'Pisces Moon OS v1.0.0 "The Arsenal" — ESP32-S3 dual-core at 240MHz, 8MB PSRAM. 47 apps across 7 categories. Ghost Engine wardriving on Core 0. What do you want to know?'},
+   r:'Pisces Moon OS v1.1.0 "ELF Treaty" — ESP32-S3 dual-core at 240MHz, 8MB PSRAM. 47 apps across 7 categories. Ghost Engine wardriving on Core 0. What do you want to know?'},
   {k:['wardrive','wifi','scan','network'],
    r:'Ghost Engine active on Core 0. Logging: /wardrive_0017.csv. Last scan: 24 networks, 12 BLE devices. GPS fix: 8 sats, 34.06713 lat. SPI Bus Treaty coordinating SD writes.'},
   {k:['ghost','partition','security','pin','tactical'],
@@ -1355,21 +1355,116 @@ async function readSerialLoop() {
 }
 
 function handleSerialMessage(msg) {
-  // Events from device
+  // ─── v1.1 STREAMING EVENTS ───────────────────────────────────
+  // Pisces Bridge v1.1 streams detection events live without
+  // requiring host polling. Update emulator views in real-time.
   if (msg.event) {
-    if (msg.event === 'ready')      brLog(`Device ready: ${msg.os} ${msg.version}`, 'ok');
-    if (msg.event === 'thinking')   brLog('[AI] Thinking...');
-    if (msg.event === 'disconnect') { brLog('Device exited bridge mode.'); bridgeDisconnect(); }
-    if (msg.event === 'timeout')    { brLog('Connection timeout.', 'er'); }
+    switch (msg.event) {
+      case 'ready':
+        brLog(`Device ready: ${msg.os} ${msg.version}`, 'ok');
+        if (msg.capabilities && msg.capabilities.length) {
+          brLog(`Capabilities: ${msg.capabilities.join(', ')}`, 'ok');
+          window.deviceCapabilities = msg.capabilities;
+        }
+        if (msg.id) {
+          brLog(`Device ID: ${msg.id}`);
+        }
+        break;
+
+      case 'wifi_seen':
+        // Tag onto the live wardrive view if it exists
+        if (window.liveWifiCount === undefined) window.liveWifiCount = 0;
+        window.liveWifiCount++;
+        const wifiLabel = msg.ssid || '(hidden)';
+        const geo = (msg.lat && msg.lng)
+          ? ` @${msg.lat.toFixed(4)},${msg.lng.toFixed(4)}` : '';
+        brLog(`WIFI: ${wifiLabel} [${msg.mac}] RSSI:${msg.rssi}${geo}`);
+        appendDetection('wifi', msg);
+        break;
+
+      case 'ble_seen':
+        if (window.liveBleCount === undefined) window.liveBleCount = 0;
+        window.liveBleCount++;
+        const bleName = msg.name || '(unnamed)';
+        brLog(`BLE: ${bleName} [${msg.mac}] RSSI:${msg.rssi}`);
+        appendDetection('ble', msg);
+        break;
+
+      case 'lora_rx':
+        brLog(`LoRa RX: ${msg.len}B RSSI:${msg.rssi} hex:${(msg.hex||'').substring(0,24)}`);
+        break;
+
+      case 'gps':
+        if (msg.valid) {
+          brLog(`GPS: ${msg.lat.toFixed(6)}, ${msg.lng.toFixed(6)} (${msg.sats} sats)`, 'ok');
+        } else {
+          brLog(`GPS: NO FIX (sats: ${msg.sats || 0})`);
+        }
+        break;
+
+      case 'wifi_scan_done':
+        brLog(`WiFi scan done: ${msg.count} networks`, 'ok');
+        break;
+
+      case 'wardrive_status':
+        brLog(`Wardrive: ${msg.active ? 'ACTIVE' : 'IDLE'}`, msg.active ? 'ok' : '');
+        wdActive = msg.active;
+        const wdBtn = document.getElementById('wd-btn');
+        if (wdBtn) {
+          wdBtn.classList.toggle('on', msg.active);
+          wdBtn.classList.toggle('off', !msg.active);
+        }
+        break;
+
+      case 'thinking':
+        brLog('[AI] Thinking...');
+        break;
+
+      case 'pong':
+        brLog(`PONG ts:${msg.ts}`);
+        break;
+
+      case 'log':
+        brLog(`[device] ${msg.msg}`);
+        break;
+
+      case 'sysinfo':
+        brLog(`SysInfo: ${msg.chip_model} @${msg.cpu_mhz}MHz heap:${msg.free_heap}`);
+        break;
+
+      case 'disconnect':
+        brLog('Device exited bridge mode.');
+        bridgeDisconnect();
+        break;
+
+      case 'timeout':
+        brLog('Connection timeout.', 'er');
+        break;
+
+      default:
+        // Unrecognized event — just log it
+        brLog(`Event: ${msg.event}`);
+    }
     return;
   }
 
-  // Responses to pending commands
+  // ─── LEGACY COMMAND/RESPONSE PATTERN ─────────────────────────
+  // Some older bridge implementations correlate via _seq.
   const seq = msg._seq;
   if (seq !== undefined && pendingCmds[seq]) {
     const { resolve } = pendingCmds[seq];
     delete pendingCmds[seq];
     resolve(msg);
+  }
+}
+
+// Append a detection to the live feed (used by wardrive view)
+function appendDetection(type, msg) {
+  // Cap the live store so we don't memory-leak during long sessions
+  if (!window.liveDetections) window.liveDetections = [];
+  window.liveDetections.push({ type, ts: Date.now(), data: msg });
+  if (window.liveDetections.length > 500) {
+    window.liveDetections = window.liveDetections.slice(-500);
   }
 }
 
