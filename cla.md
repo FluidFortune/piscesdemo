@@ -8,7 +8,7 @@ fluidfortune.com
 
 # Contributor License Agreement
 
-**Pisces Moon OS Web Demo**
+**Pisces Moon OS**  
 **Fluid Fortune / Eric Becker**
 
 Thank you for your interest in contributing to Pisces Moon OS and its
@@ -27,6 +27,15 @@ before submitting a pull request.
 modifications or additions to existing work, that you submit to the
 Project in any form — source code, documentation, bug reports, feature
 requests, or any other material.
+
+**"Project"** includes all Fluid Fortune / Eric Becker repositories
+related to Pisces Moon OS, including but not limited to:
+- Pisces Moon OS firmware (PiscesMoon)
+- Pisces Moon Web Emulator (pisces-moon-demo)
+- Pisces Moon SDL2 Dev Environment (sdl2/)
+- Pisces Moon Peripheral Bridge sketch
+- KodeDot HAL and emulation layer
+- Any associated tools, documentation, or build infrastructure
 
 **"You"** means the individual or legal entity submitting a Contribution.
 
@@ -63,10 +72,27 @@ by your Contribution alone or in combination with the Project.
   rights to submit it under the terms of this CLA.
 - Your Contribution does not, to the best of your knowledge, violate
   any third party's intellectual property rights.
+- Your Contribution does not include proprietary hardware specifications,
+  pinouts, schematics, or confidential technical information belonging
+  to any hardware manufacturer or vendor.
 
 ---
 
-## 5. No Obligation
+## 5. Third-Party Hardware
+
+Contributions related to third-party hardware targets (including but
+not limited to KodeDot, LilyGO, Espressif, or any other vendor) must
+be based solely on publicly available information such as published
+datasheets, official block diagrams, open specifications, or your own
+original reverse engineering of hardware you legally own.
+
+Contributions must not incorporate confidential, proprietary, or NDA-
+protected technical information from any hardware vendor without explicit
+written permission from that vendor.
+
+---
+
+## 6. No Obligation
 
 We are under no obligation to accept, review, or merge any Contribution.
 Submitting a Contribution does not guarantee it will be included in the
@@ -74,19 +100,29 @@ Project.
 
 ---
 
-## 6. License of the Project
+## 7. License of the Project
 
 The Project is licensed under the GNU Affero General Public License
 v3.0 or later (AGPL-3.0-or-later). Your Contributions will be
 distributed under the same license.
 
 We reserve the right to re-license the Project under other open source
-licenses compatible with AGPL-3.0 in the future. This CLA gives us the
-flexibility to do so without requiring additional permission from you.
+licenses compatible with AGPL-3.0 in the future, or to enter into
+commercial licensing arrangements. This CLA gives us the flexibility
+to do so without requiring additional permission from you.
 
 ---
 
-## 7. How to Sign
+## 8. No Warranty
+
+You provide your Contributions on an "as is" basis, without warranties
+or conditions of any kind, either express or implied, including without
+limitation any warranties of merchantability, fitness for a particular
+purpose, or non-infringement.
+
+---
+
+## 9. How to Sign
 
 By opening a pull request against any Fluid Fortune repository, you
 confirm that you have read this CLA and agree to its terms.
@@ -98,7 +134,7 @@ description should include the following statement:
 
 ---
 
-## 8. Contact
+## 10. Contact
 
 Questions about this CLA: open an issue on the relevant GitHub
 repository or contact us through [fluidfortune.com](https://fluidfortune.com).
