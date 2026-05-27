@@ -1,0 +1,2933 @@
+<!--
+Pisces Moon OS — P4 Web Demo
+Copyright (C) 2026 Eric Becker / Fluid Fortune
+SPDX-License-Identifier: AGPL-3.0-or-later
+fluidfortune.com
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pisces Moon OS — P4 Demo (5")</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;900&family=DM+Mono:wght@300;400;500&display=swap');
+
+/* ── ROOT VARS ─────────────────────────────────────────── */
+:root {
+  /* P4 palette — warmer, more premium than S3 */
+  --g:  #00ff88;   /* primary green */
+  --g2: #00cc66;   /* muted green */
+  --t:  #00cfff;   /* cyan accent */
+  --am: #ffcc00;   /* amber */
+  --r:  #ff4444;   /* red */
+  --mg: #cc44ff;   /* magenta */
+  --or: #ff8800;   /* orange */
+  --bg: #03060a;   /* deep bg */
+  --dk: #080d14;   /* dark surface */
+  --s1: #0c1520;   /* surface 1 */
+  --s2: #111e2e;   /* surface 2 */
+  --bdr: #0d2a1a;  /* border */
+  --bdr2: #0a1e30; /* border 2 */
+  /* 5" display target: 800×480 rendered area */
+  --dw: 800px;
+  --dh: 480px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: 'DM Mono', monospace;
+  color: var(--g);
+  overflow-x: hidden;
+}
+
+/* ── PAGE SHELL ──────────────────────────────────────────── */
+.page-badge {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  color: #111e2e;
+  letter-spacing: 5px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+/* ── DEVICE CHASSIS ──────────────────────────────────────── */
+.chassis {
+  position: relative;
+  width: 860px;
+  background: #060a0f;
+  border-radius: 22px;
+  border: 2px solid #0d1f0f;
+  box-shadow:
+    0 0 80px rgba(0,255,136,0.06),
+    0 0 200px rgba(0,255,136,0.02),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  padding: 18px 30px 16px;
+}
+
+/* corner accent bolts */
+.chassis::before, .chassis::after {
+  content: '';
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #0a1a0a;
+  border: 1px solid #1a3a1a;
+}
+.chassis::before { top: 14px; left: 14px; }
+.chassis::after  { top: 14px; right: 14px; }
+
+.bezel {
+  background: #000;
+  border-radius: 8px;
+  border: 2px solid #0a1e10;
+  overflow: hidden;
+  position: relative;
+  width: var(--dw);
+  height: var(--dh);
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+}
+
+/* scanline overlay */
+.bezel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,0.08) 3px,
+    rgba(0,0,0,0.08) 4px
+  );
+}
+
+.screen {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+
+/* scan line animation */
+.scan-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(transparent, rgba(0,255,136,0.04), transparent);
+  pointer-events: none;
+  z-index: 100;
+  animation: scanmove 8s linear infinite;
+}
+@keyframes scanmove { 0%{ top:-2px } 100%{ top:482px } }
+
+/* ── PERSISTENT CHROME ───────────────────────────────────── */
+/* Top bar: 28px */
+.topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 28px;
+  background: #04080c;
+  border-bottom: 1px solid #0d2a1a;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  z-index: 50;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+.topbar-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.chip-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--g2);
+  box-shadow: 0 0 4px var(--g2);
+  animation: chipdot 3s infinite;
+}
+@keyframes chipdot {
+  0%,100%{ opacity:1 } 50%{ opacity:0.3 }
+}
+.chip-dot.c { background: var(--t); box-shadow: 0 0 4px var(--t); animation-delay:0.5s; }
+.chip-dot.r { background: var(--r); box-shadow: 0 0 4px var(--r); animation-delay:1s; }
+.topbar-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  flex: 1;
+  display: flex;
+  gap: 1px;
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 8px;
+  color: #003320;
+}
+.topbar-badge {
+  font-size: 7px;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: #001a10;
+  border: 1px solid #003320;
+  color: #005533;
+  letter-spacing: 1px;
+}
+.topbar-badge.live {
+  border-color: var(--g);
+  color: var(--g);
+  background: #001a08;
+  animation: badgepulse 2s infinite;
+}
+@keyframes badgepulse {
+  0%,100%{ box-shadow: none }
+  50%{ box-shadow: 0 0 6px rgba(0,255,136,0.3) }
+}
+
+/* Status bar bottom: 16px */
+.statusbar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 16px;
+  background: #04080c;
+  border-top: 1px solid #0d2a1a;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 7px;
+  color: #003320;
+  gap: 10px;
+  z-index: 50;
+}
+.sb-item { display: flex; align-items: center; gap: 3px; }
+.sb-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #003320;
+}
+.sb-dot.on { background: var(--g); box-shadow: 0 0 3px var(--g); }
+.sb-dot.t  { background: var(--t); box-shadow: 0 0 3px var(--t); }
+.sb-dot.r  { background: var(--r); box-shadow: 0 0 3px var(--r); }
+.sb-dot.am { background: var(--am); box-shadow: 0 0 3px var(--am); }
+
+/* Ghost engine bar: 12px just below topbar */
+.ghost-bar {
+  position: absolute;
+  top: 28px; left: 0; right: 0;
+  height: 12px;
+  background: #020604;
+  border-bottom: 1px solid #041a0a;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  gap: 8px;
+  font-size: 7px;
+  color: #003320;
+  z-index: 49;
+  display: none;
+}
+.ghost-bar.on { display: flex; }
+.ghost-pulse {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #003320;
+  flex-shrink: 0;
+  animation: gpulse 1.5s infinite;
+}
+@keyframes gpulse {
+  0%,100%{ background: #003320 }
+  50%{ background: var(--g); box-shadow: 0 0 5px var(--g) }
+}
+
+/* ── VIEWS ────────────────────────────────────────────────── */
+.view {
+  position: absolute;
+  top: 40px; /* topbar + ghost bar */
+  left: 0; right: 0;
+  bottom: 16px;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.view.active { display: flex; }
+
+/* When ghost bar is on, push views down 12px */
+.ghost-active .view { top: 52px; }
+
+/* ── BIOS ─────────────────────────────────────────────────── */
+#view-bios {
+  background: #000;
+  padding: 8px 12px;
+  overflow: hidden;
+  font-size: 9px;
+  line-height: 13px;
+  top: 0; /* bios fills full */
+}
+.bios-hdr {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  color: var(--g);
+  letter-spacing: 3px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #003320;
+  padding-bottom: 6px;
+}
+.bios-sub {
+  font-size: 8px;
+  color: #003320;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.bl { display: flex; gap: 8px; opacity: 0; animation: bin 0.05s forwards; margin-bottom: 1px; }
+@keyframes bin { to { opacity:1 } }
+.bt { color: #003320; width: 40px; flex-shrink:0; }
+.bp { color: var(--g); width: 180px; flex-shrink:0; }
+.bv { color: #005533; flex: 1; }
+.bok { color: var(--g); }
+.ber { color: var(--r); }
+
+/* ── EXPLAINER ────────────────────────────────────────────── */
+#view-explainer {
+  background: #000;
+  overflow-y: auto;
+  padding: 16px 20px;
+  gap: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #003320 transparent;
+  top: 0;
+}
+.exp-card {
+  background: var(--s1);
+  border: 1px solid var(--bdr);
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+.exp-h {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--g);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.exp-h::before {
+  content: '';
+  width: 3px; height: 12px;
+  background: var(--g);
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+.exp-body {
+  font-size: 8px;
+  color: #668877;
+  line-height: 1.6;
+}
+.exp-body strong { color: var(--g); }
+.exp-body .am { color: var(--am); }
+.exp-body .cy { color: var(--t); }
+.exp-body .mg { color: var(--mg); }
+.exp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.exp-start {
+  display: block;
+  width: 100%;
+  background: #002211;
+  border: 1px solid var(--g);
+  color: var(--g);
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-top: 4px;
+  transition: all 0.15s;
+}
+.exp-start:hover { background: var(--g); color: #000; }
+
+/* ── LAUNCHER ─────────────────────────────────────────────── */
+#view-launcher {
+  background: var(--bg);
+  padding: 8px;
+}
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  height: 100%;
+}
+.cat-tile {
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: var(--s1);
+  border: 1px solid var(--bdr2);
+  transition: all 0.12s;
+  position: relative;
+  overflow: hidden;
+  gap: 6px;
+}
+.cat-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 60%);
+}
+.cat-tile:hover { transform: scale(1.04); z-index: 2; }
+.cat-tile.comms:hover  { background: #001525; border-color: var(--t);  box-shadow: 0 0 16px rgba(0,207,255,0.2); }
+.cat-tile.cyber:hover  { background: #1a0505; border-color: var(--r);  box-shadow: 0 0 16px rgba(255,68,68,0.2); }
+.cat-tile.tools:hover  { background: #1a1000; border-color: var(--am); box-shadow: 0 0 16px rgba(255,204,0,0.2); }
+.cat-tile.games:hover  { background: #001510; border-color: var(--g);  box-shadow: 0 0 16px rgba(0,255,136,0.2); }
+.cat-tile.intel:hover  { background: #001520; border-color: var(--t);  box-shadow: 0 0 16px rgba(0,207,255,0.2); }
+.cat-tile.media:hover  { background: #180010; border-color: var(--mg); box-shadow: 0 0 16px rgba(204,68,255,0.2); }
+.cat-tile.system:hover { background: #101010; border-color: #666;      box-shadow: 0 0 16px rgba(100,100,100,0.2); }
+.cat-icon { font-size: 28px; }
+.cat-label {
+  font-family: 'Orbitron', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+}
+.cat-count {
+  font-size: 7px;
+  position: absolute;
+  bottom: 5px;
+  right: 7px;
+  color: #002210;
+}
+.comms .cat-label  { color: var(--t); }
+.cyber .cat-label  { color: var(--r); }
+.tools .cat-label  { color: var(--am); }
+.games .cat-label  { color: var(--g); }
+.intel .cat-label  { color: var(--t); }
+.media .cat-label  { color: var(--mg); }
+.system .cat-label { color: #848484; }
+
+/* ── APP GRID ─────────────────────────────────────────────── */
+#view-apps { background: var(--bg); }
+.apps-hdr {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 8px;
+  border-bottom: 1px solid var(--bdr2);
+  font-size: 9px;
+  background: var(--s1);
+  flex-shrink: 0;
+}
+.apps-back {
+  color: #003320;
+  cursor: pointer;
+  font-size: 9px;
+}
+.apps-back:hover { color: var(--g); }
+.apps-cat-label {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+.app-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  padding: 8px;
+  flex: 1;
+  overflow-y: auto;
+  align-content: start;
+}
+.app-tile {
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: var(--s1);
+  border: 1px solid var(--bdr2);
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-align: center;
+  padding: 6px 4px;
+  min-height: 54px;
+  transition: all 0.1s;
+  position: relative;
+  line-height: 1.3;
+}
+.app-tile:hover { transform: scale(1.06); z-index: 2; }
+.app-tile.hw-only {
+  opacity: 0.4;
+}
+.app-tile.hw-only::after {
+  content: 'HW';
+  position: absolute;
+  bottom: 3px; right: 4px;
+  font-size: 6px;
+  color: var(--am);
+  letter-spacing: 0;
+}
+
+/* ── INNER APP VIEWS ─────────────────────────────────────── */
+
+/* shared inner view wrapper */
+.iview {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #000;
+}
+.iview-hdr {
+  height: 22px;
+  background: var(--s1);
+  border-bottom: 1px solid var(--bdr2);
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 8px;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.iview-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bdr) transparent;
+}
+
+/* ── TERMINAL ─────────────────────────────────────────────── */
+.term-out {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 8px;
+  font-size: 8px;
+  line-height: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #003320 transparent;
+}
+.tl { margin-bottom: 1px; white-space: pre-wrap; word-break: break-all; }
+.tl.u { color: var(--g) }
+.tl.a { color: #aaa }
+.tl.s { color: var(--am) }
+.tl.d { color: #003320 }
+.tl.e { color: var(--r) }
+.tl.b { color: var(--t) }
+.term-input-row {
+  height: 24px;
+  border-top: 1px solid var(--bdr);
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  gap: 4px;
+  flex-shrink: 0;
+  background: #040810;
+}
+.term-pr { color: var(--g); font-size: 8px; flex-shrink: 0; }
+.term-in {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  caret-color: var(--g);
+}
+.term-send {
+  background: #002210;
+  border: 1px solid var(--g);
+  color: var(--g);
+  font-family: 'DM Mono', monospace;
+  font-size: 7px;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.term-send:hover { background: var(--g); color: #000; }
+
+/* ── WARDRIVE ─────────────────────────────────────────────── */
+.wd-body {
+  flex: 1;
+  display: flex;
+  padding: 8px;
+  gap: 8px;
+}
+.wd-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 130px;
+  flex-shrink: 0;
+}
+.wd-stat {
+  background: var(--s1);
+  border: 1px solid var(--bdr2);
+  border-radius: 4px;
+  padding: 5px 8px;
+}
+.wd-stat-label { font-size: 7px; color: #003320; letter-spacing: 1px; }
+.wd-stat-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 18px;
+}
+.wd-stat-val.w { color: var(--g) }
+.wd-stat-val.b { color: var(--t) }
+.wd-stat-val.g { color: var(--am) }
+.wd-stat-val.l { color: var(--mg) }
+.wd-map {
+  flex: 1;
+  background: #010805;
+  border: 1px solid var(--bdr);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+.wd-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,40,16,0.4) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,40,16,0.4) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.wd-dot {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.wd-dot.w { width:5px;height:5px;background:var(--g);opacity:0.7; }
+.wd-dot.b { width:4px;height:4px;background:var(--t);opacity:0.6; }
+.wd-pos {
+  position: absolute;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--am);
+  border: 2px solid #fff;
+  transform: translate(-50%,-50%);
+  box-shadow: 0 0 12px var(--am);
+  animation: posping 2s infinite;
+}
+@keyframes posping {
+  0%,100%{ box-shadow: 0 0 6px var(--am) }
+  50%{ box-shadow: 0 0 20px var(--am), 0 0 40px rgba(255,204,0,0.3) }
+}
+.wd-info {
+  font-size: 7px;
+  color: #003320;
+  padding: 4px 8px;
+  border-top: 1px solid var(--bdr);
+  flex-shrink: 0;
+  display: flex;
+  gap: 16px;
+}
+.wd-log-entry {
+  font-size: 7px;
+  padding: 2px 0;
+  border-bottom: 1px solid #030e06;
+  color: #003320;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wd-log-entry.w { color: #005533; }
+.wd-log-entry.b { color: #004455; }
+
+/* ── PEER REGISTRY (system / bridge) ─────────────────────── */
+.peer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 10px;
+}
+.peer-card {
+  background: var(--s1);
+  border: 1px solid var(--bdr2);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+.peer-card.connected {
+  border-color: var(--g);
+  background: #001a0a;
+}
+.peer-card.unavail {
+  opacity: 0.45;
+}
+.peer-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+.peer-cap {
+  font-size: 7px;
+  color: #003320;
+  line-height: 1.5;
+}
+.peer-status {
+  font-size: 7px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── GPS ──────────────────────────────────────────────────── */
+.gps-body { display: flex; flex-direction: column; height: 100%; padding: 8px; gap: 6px; }
+.gps-map-panel {
+  flex: 1;
+  background: #010a04;
+  border: 1px solid var(--bdr);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+.gps-stats-row {
+  display: flex;
+  gap: 8px;
+}
+.gps-stat {
+  flex: 1;
+  background: var(--s1);
+  border: 1px solid var(--bdr2);
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 7px;
+}
+.gps-stat-label { color: #003320; letter-spacing: 1px; }
+.gps-stat-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  color: var(--am);
+  margin-top: 1px;
+}
+
+/* ── CLOCK ────────────────────────────────────────────────── */
+.clock-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 8px;
+}
+.clock-main {
+  font-family: 'Orbitron', monospace;
+  font-size: 56px;
+  font-weight: 900;
+  color: var(--g);
+  letter-spacing: 4px;
+  text-shadow: 0 0 30px rgba(0,255,136,0.4);
+}
+.clock-date { font-size: 11px; color: #aaa; letter-spacing: 3px; }
+.clock-sw {
+  font-family: 'Orbitron', monospace;
+  font-size: 22px;
+  color: #003320;
+  letter-spacing: 2px;
+  margin-top: 8px;
+}
+.clock-sw.run { color: var(--g); }
+.clock-sw-hint { font-size: 8px; color: #003320; }
+
+/* ── CALCULATOR ───────────────────────────────────────────── */
+.calc-body {
+  display: flex;
+  height: 100%;
+  padding: 8px;
+  gap: 10px;
+}
+.calc-display {
+  flex: 0 0 180px;
+  background: #010804;
+  border: 1px solid #003320;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 8px;
+}
+.calc-prev { font-size: 9px; color: #555; height: 14px; text-align: right; }
+.calc-cur  { font-size: 26px; color: #fff; text-align: right; word-break: break-all; }
+.calc-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+.calc-btn {
+  background: #0a0f0a;
+  border: 1px solid #1a2a1a;
+  color: #fff;
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 6px;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.06s;
+}
+.calc-btn:active, .calc-btn.pressed { background: #1a2a1a; color: var(--g); border-color: var(--g); }
+.calc-btn.op { color: var(--am); border-color: #2a2000; }
+.calc-btn.eq { color: var(--g); border-color: #002210; }
+.calc-btn.cl { color: var(--r); border-color: #220000; }
+
+/* ── CALENDAR ─────────────────────────────────────────────── */
+.cal-body { display: flex; flex-direction: column; height: 100%; padding: 8px; gap: 5px; }
+.cal-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  text-align: center;
+  color: #fff;
+  letter-spacing: 3px;
+  padding: 4px 0;
+}
+.cal-dow {
+  display: grid;
+  grid-template-columns: repeat(7,1fr);
+  font-size: 8px;
+  color: #555;
+  text-align: center;
+  border-bottom: 1px solid var(--bdr);
+  padding-bottom: 3px;
+}
+.cal-dow .su { color: var(--r); }
+.cal-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7,1fr);
+  grid-auto-rows: 1fr;
+  gap: 2px;
+}
+.cal-cell {
+  background: #050505;
+  border: 1px solid #0d0d0d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #888;
+  font-family: 'DM Mono', monospace;
+}
+.cal-cell.sun { color: #f88; }
+.cal-cell.today { background: var(--g); color: #000; font-weight: 700; }
+.cal-cell.empty { background: transparent; border: none; }
+.cal-nav-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
+  font-size: 8px;
+  color: #003320;
+}
+.cal-nav-btn {
+  background: #0a0f0a;
+  border: 1px solid #003320;
+  color: var(--g);
+  padding: 3px 10px;
+  cursor: pointer;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  user-select: none;
+}
+.cal-nav-btn:hover { border-color: var(--g); }
+
+/* ── ABOUT ────────────────────────────────────────────────── */
+.about-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 6px;
+  padding: 12px;
+  text-align: center;
+}
+.about-logo {
+  font-family: 'Orbitron', monospace;
+  font-size: 20px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--mg), var(--t), var(--g));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 3px;
+}
+.about-sub { font-size: 9px; color: var(--g); letter-spacing: 3px; }
+.about-spec { font-size: 7px; color: #444; line-height: 1.7; }
+.about-spec strong { color: #666; }
+
+/* ── BRIDGE VIEW ─────────────────────────────────────────── */
+.bridge-body { display: flex; flex-direction: column; height: 100%; padding: 8px; gap: 6px; }
+.bridge-status {
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 9px;
+  text-align: center;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+.bridge-status.dc { background: #150000; border: 1px solid #330000; color: var(--r); }
+.bridge-status.cn { background: #001500; border: 1px solid #003300; color: var(--g); }
+.bridge-log {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 7px;
+  color: #003320;
+  line-height: 1.4;
+  border: 1px solid var(--bdr);
+  border-radius: 3px;
+  padding: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bdr) transparent;
+}
+.bridge-btn {
+  background: #002210;
+  border: 1px solid var(--g);
+  color: var(--g);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  text-align: center;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.bridge-btn:hover { background: var(--g); color: #000; }
+
+/* ── STUB VIEW ────────────────────────────────────────────── */
+.stub-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 8px;
+  text-align: center;
+  padding: 16px;
+}
+.stub-icon { font-size: 32px; }
+.stub-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: var(--g);
+}
+.stub-detail { font-size: 8px; color: #003320; line-height: 1.6; max-width: 360px; }
+.stub-hw-tag {
+  font-size: 7px;
+  padding: 3px 8px;
+  border: 1px solid #332200;
+  border-radius: 2px;
+  color: var(--am);
+  background: #1a0e00;
+  letter-spacing: 1px;
+}
+
+/* ── SNAKE ────────────────────────────────────────────────── */
+.game-view { display: flex; flex-direction: column; height: 100%; background: #000; align-items: center; }
+.game-hint { font-size: 7px; color: #003320; padding: 3px 8px; text-align: center; width: 100%; border-top: 1px solid var(--bdr); flex-shrink: 0; }
+.game-banner { font-size: 7px; color: var(--am); background: #1a0e00; border-bottom: 1px solid #332200; padding: 2px 8px; text-align: center; width: 100%; flex-shrink: 0; }
+.game-over-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.92);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 5;
+}
+.go-title {
+  font-family: 'Orbitron', monospace;
+  color: var(--r); font-size: 28px; letter-spacing: 6px;
+  margin-bottom: 8px;
+}
+.go-score { color: #fff; font-size: 12px; margin-bottom: 4px; }
+.go-hi { color: var(--am); font-size: 10px; margin-bottom: 14px; }
+.go-hi.new { animation: newhi 0.5s infinite; }
+@keyframes newhi { 50% { color: #fff; } }
+.go-btn {
+  background: #0a0f0a; border: 1px solid var(--g);
+  color: var(--g); padding: 6px 16px;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; cursor: pointer; margin: 3px;
+}
+.go-btn:hover { background: var(--g); color: #000; }
+
+/* ── NOTEPAD ──────────────────────────────────────────────── */
+.notepad-ta {
+  flex: 1;
+  width: 100%;
+  background: #010604;
+  color: #fff;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 8px 10px;
+  caret-color: var(--g);
+  line-height: 1.6;
+}
+.notepad-ta::placeholder { color: #222; }
+.notepad-footer {
+  font-size: 7px; color: #003320;
+  padding: 3px 8px;
+  border-top: 1px solid var(--bdr);
+  background: #040810;
+  flex-shrink: 0;
+}
+
+/* ── SETTINGS OVERLAY ─────────────────────────────────────── */
+.s-ov {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.97);
+  z-index: 200;
+  display: none;
+  flex-direction: column;
+  padding: 16px 20px;
+  gap: 8px;
+}
+.s-ov.open { display: flex; }
+.s-ttl {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px; color: var(--g);
+  letter-spacing: 3px;
+  border-bottom: 1px solid var(--bdr);
+  padding-bottom: 8px;
+}
+.s-lbl { font-size: 7px; color: #668877; letter-spacing: 1px; margin-bottom: 3px; }
+.s-in {
+  background: #060810;
+  border: 1px solid var(--bdr);
+  color: var(--g);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  padding: 5px 8px;
+  border-radius: 3px;
+  width: 100%;
+  outline: none;
+}
+.s-in:focus { border-color: var(--g); }
+.s-hint { font-size: 7px; color: #334; line-height: 1.6; }
+.s-hint strong { color: #003320; }
+.s-st { font-size: 8px; min-height: 14px; }
+.s-st.ok { color: var(--g); } .s-st.er { color: var(--r); }
+.s-row { display: flex; gap: 6px; }
+.s-save {
+  background: #002210; border: 1px solid var(--g); color: var(--g);
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  padding: 5px 10px; cursor: pointer; border-radius: 3px; flex: 1;
+}
+.s-save:hover { background: var(--g); color: #000; }
+.s-clr {
+  background: transparent; border: 1px solid #330000; color: #330000;
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  padding: 5px 10px; cursor: pointer; border-radius: 3px;
+}
+.s-clr:hover { border-color: var(--r); color: var(--r); }
+.s-close {
+  background: transparent; border: 1px solid var(--bdr); color: #003320;
+  font-family: 'DM Mono', monospace; font-size: 8px;
+  padding: 5px; cursor: pointer; border-radius: 3px;
+  text-align: center; margin-top: auto;
+}
+.s-close:hover { border-color: #668877; color: #668877; }
+.sdot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #330000; margin-right: 4px; vertical-align: middle; }
+.sdot.on { background: var(--g); box-shadow: 0 0 4px var(--g); }
+
+/* ── CONNECT STRIP (outside chassis) ─────────────────────── */
+.connect-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.connect-btn {
+  background: #002210;
+  border: 1px solid var(--g);
+  color: var(--g);
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 1px;
+  padding: 5px 14px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+.connect-btn:hover { background: var(--g); color: #000; }
+.connect-btn.connected { border-color: var(--g); background: #001a08; }
+.connect-status { font-size: 7px; color: #003320; letter-spacing: 1px; }
+.connect-status.on { color: var(--g); }
+.connect-status.er { color: var(--r); }
+
+/* gear icon */
+.gear-btn {
+  position: absolute;
+  bottom: 20px; right: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 60;
+  color: #003320;
+  transition: color 0.15s;
+}
+.gear-btn:hover { color: var(--g); }
+.gear-btn.on { color: var(--g); }
+.gear-btn.pulse { animation: gearpulse 2s infinite; }
+@keyframes gearpulse {
+  0%,100%{ color: #003320 }
+  50%{ color: var(--am); text-shadow: 0 0 6px var(--am); }
+}
+
+/* tetris music specific */
+.paused-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', monospace;
+  color: var(--am); font-size: 18px; letter-spacing: 8px;
+}
+</style>
+</head>
+<body>
+
+<div class="page-badge">PISCES MOON OS · P4 DEMO · ELECROW CROWPANEL 7" · DUAL RISC-V @ 360MHz</div>
+
+<div class="chassis">
+  <div class="bezel">
+    <div class="screen" id="screen">
+      <div class="scan-line"></div>
+
+      <!-- TOP BAR -->
+      <div class="topbar" id="topbar" onclick="topbarClick()">
+        <div class="topbar-chip">
+          <div class="chip-dot"></div>
+          <div class="chip-dot c"></div>
+          <div class="chip-dot r"></div>
+        </div>
+        <div class="topbar-title" id="topbar-title">
+          <span style="color:#cc44ff">P</span><span style="color:#00cfff">I</span><span style="color:#00ff88">S</span><span style="color:#ffcc00">C</span><span style="color:#ff8800">E</span><span style="color:#ff4444">S</span><span style="color:#fff"> </span><span style="color:#00ff88">M</span><span style="color:#00cfff">O</span><span style="color:#cc44ff">O</span><span style="color:#00ff88">N</span><span style="color:#fff"> </span><span style="color:#00ff88">O</span><span style="color:#00cfff">S</span>
+        </div>
+        <div class="topbar-right">
+          <span id="topbar-time">--:--</span>
+          <span id="topbar-gps">🛰 --</span>
+          <span class="topbar-badge" id="topbar-badge">P4 · C6</span>
+          <span class="topbar-badge" id="topbar-fw">v1.2.0-α</span>
+        </div>
+      </div>
+
+      <!-- GHOST ENGINE BAR -->
+      <div class="ghost-bar" id="ghost-bar">
+        <div class="ghost-pulse"></div>
+        <span id="ghost-txt">C6 · GHOST ENGINE ACTIVE</span>
+        <span id="ghost-counts" style="margin-left:auto"></span>
+      </div>
+
+      <!-- GEAR -->
+      <div class="gear-btn" id="gear-btn" onclick="toggleSettings()" title="Gemini API key">⚙</div>
+
+      <!-- STATUS BAR -->
+      <div class="statusbar">
+        <div class="sb-item"><div class="sb-dot" id="sb-dev"></div><span id="sb-dev-txt">NO BRIDGE</span></div>
+        <div class="sb-item"><div class="sb-dot t" id="sb-c6"></div><span>C6 GHOST</span></div>
+        <div class="sb-item"><div class="sb-dot am" id="sb-gps-dot"></div><span id="sb-gps-txt">GPS --</span></div>
+        <div class="sb-item"><div class="sb-dot" id="sb-lora"></div><span>LORA</span></div>
+        <div class="sb-item"><div class="sb-dot" id="sb-nfc"></div><span>NFC</span></div>
+        <div class="sb-item" style="margin-left:auto"><span>🔋 82%</span></div>
+        <div class="sb-item"><span id="sb-time2">--:--</span></div>
+      </div>
+
+      <!-- SETTINGS OVERLAY -->
+      <div class="s-ov" id="s-ov">
+        <div class="s-ttl">⚙ TERMINAL SETTINGS</div>
+        <div class="s-lbl">GOOGLE GEMINI API KEY</div>
+        <input class="s-in" id="s-key" type="password" placeholder="AIzaSy..." autocomplete="off" spellcheck="false">
+        <div class="s-hint">
+          🔒 Stored in <strong>your browser only</strong>. Goes directly to Google — never through our servers.<br><br>
+          Get a free key (no credit card): <strong>aistudio.google.com/apikey</strong><br>
+          Sign in → Create API Key → paste above → Save.
+        </div>
+        <div class="s-st" id="s-st"><span class="sdot" id="sdot"></span><span id="s-msg">No key — demo mode</span></div>
+        <div class="s-row">
+          <button class="s-save" onclick="saveKey()">SAVE KEY</button>
+          <button class="s-clr" onclick="clearKey()">CLEAR</button>
+        </div>
+        <button class="s-close" onclick="toggleSettings()">CLOSE ✕</button>
+      </div>
+
+      <!-- ════════════════ VIEWS ════════════════ -->
+
+      <!-- BIOS -->
+      <div class="view active" id="view-bios">
+        <div class="bios-hdr">PISCES MOON OS — BOOT SEQUENCE</div>
+        <div class="bios-sub">ESP32-P4 + ESP32-C6 COPROCESSOR · ELECROW CROWPANEL ADVANCED 7"</div>
+        <div id="bios-out"></div>
+      </div>
+
+      <!-- EXPLAINER -->
+      <div class="view" id="view-explainer" style="display:none;flex-direction:column;">
+        <div class="exp-grid">
+          <div class="exp-card">
+            <div class="exp-h">PISCES MOON P4</div>
+            <div class="exp-body">
+              An operating system for the <strong>ELECROW CrowPanel Advanced 7"</strong> — $46 of hardware running a dual RISC-V at 360MHz with a dedicated ESP32-C6 coprocessor. <span class="am">56 apps</span> across 7 categories. The Ghost Engine runs on the C6 — dedicated silicon, not a software trick.
+            </div>
+          </div>
+          <div class="exp-card">
+            <div class="exp-h">C6 GHOST ENGINE</div>
+            <div class="exp-body">
+              The <strong>ESP32-C6 coprocessor</strong> does nothing but radios. WiFi scan, BLE scan, 802.11 promiscuous capture, EAPOL collection, NFC — all on dedicated silicon. The P4 can play Doom; <span class="am">the C6 never stops wardriving.</span>
+            </div>
+          </div>
+          <div class="exp-card">
+            <div class="exp-h">MODULAR PEER REGISTRY</div>
+            <div class="exp-body">
+              Apps don't ask "does this board have LoRa?" They ask <span class="cy">"is a LoRa peer available?"</span> Plug in an SX1262 slot module → it registers. Plug in a T-Beam Supreme S3 → secondary WiFi/BLE/LoRa appears. Unplug anything → capability withdraws. No reboots.
+            </div>
+          </div>
+          <div class="exp-card">
+            <div class="exp-h">BRIDGE MODE</div>
+            <div class="exp-body">
+              Connect a <strong>T-Deck Plus, Cardputer ADV, or T-Beam Supreme S3</strong> running Pisces Bridge firmware via USB. Live detections replace demo data. The P4 demo becomes a real intelligence dashboard. <span class="am">Web Serial API — Chrome/Edge only.</span>
+            </div>
+          </div>
+        </div>
+        <div class="exp-card" style="margin-top:0;">
+          <div class="exp-h">NAVIGATION</div>
+          <div class="exp-body">
+            <strong>Tap any category</strong> to open it. <strong>Tap an app</strong> to launch it. <span class="am">Tap the green topbar</span> to go back. Same navigation model as the real device.
+          </div>
+        </div>
+        <button class="exp-start" onclick="enterDemo()">▶ ENTER DEMO</button>
+      </div>
+
+      <!-- LAUNCHER -->
+      <div class="view" id="view-launcher">
+        <div class="cat-grid" id="cat-grid"></div>
+      </div>
+
+      <!-- APPS -->
+      <div class="view" id="view-apps">
+        <div class="apps-hdr">
+          <span class="apps-back" onclick="showView('launcher')">◀ BACK</span>
+          <span class="apps-cat-label" id="apps-cat-label">APPS</span>
+        </div>
+        <div class="app-grid" id="app-grid"></div>
+      </div>
+
+      <!-- TERMINAL -->
+      <div class="view" id="view-terminal">
+        <div class="iview">
+          <div class="iview-hdr">
+            <span style="color:var(--g)">GEMINI TERMINAL</span>
+            <span style="color:#003320;margin-left:auto;font-size:7px" id="term-mode">DEMO MODE</span>
+          </div>
+          <div class="term-out" id="term-out"></div>
+          <div class="term-input-row">
+            <span class="term-pr">HP0&gt;</span>
+            <input class="term-in" id="term-in" placeholder="type your prompt..." autocomplete="off">
+            <button class="term-send" onclick="termSend()">SEND</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- WARDRIVE -->
+      <div class="view" id="view-wardrive">
+        <div class="iview">
+          <div class="iview-hdr">
+            <span style="color:var(--r)">WARDRIVE</span>
+            <span id="wd-session" style="color:#003320;font-size:7px">session_084.db</span>
+            <span id="wd-badge" style="margin-left:auto;font-size:7px;color:#003320">C6 GHOST ENGINE · CORE 0</span>
+          </div>
+          <div class="wd-body">
+            <div class="wd-stats">
+              <div class="wd-stat">
+                <div class="wd-stat-label">WIFI</div>
+                <div class="wd-stat-val w" id="wd-wifi">0</div>
+              </div>
+              <div class="wd-stat">
+                <div class="wd-stat-label">BLE</div>
+                <div class="wd-stat-val b" id="wd-ble">0</div>
+              </div>
+              <div class="wd-stat">
+                <div class="wd-stat-label">SATS</div>
+                <div class="wd-stat-val g" id="wd-sats">0</div>
+              </div>
+              <div class="wd-stat">
+                <div class="wd-stat-label">SESSION</div>
+                <div class="wd-stat-val l" id="wd-total" style="font-size:13px">0 pts</div>
+              </div>
+              <div class="wd-stat" style="flex:1;overflow-y:auto;padding:4px 6px;" id="wd-log-panel">
+                <div style="font-size:7px;color:#003320;margin-bottom:3px;letter-spacing:1px">RECENT</div>
+              </div>
+            </div>
+            <div class="wd-map" id="wd-map">
+              <div class="wd-grid"></div>
+              <div class="wd-pos" id="wd-pos" style="left:50%;top:50%"></div>
+            </div>
+          </div>
+          <div class="wd-info">
+            <span id="wd-lat">LAT --</span>
+            <span id="wd-lng">LNG --</span>
+            <span id="wd-mode" style="color:var(--g)">● SIMULATED</span>
+            <span id="wd-toggle-btn" style="margin-left:auto;cursor:pointer;color:var(--am)" onclick="toggleWardrive()">⏸ PAUSE</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- GPS -->
+      <div class="view" id="view-gps">
+        <div class="gps-body">
+          <div class="gps-map-panel" id="gps-map">
+            <div class="wd-grid"></div>
+            <div class="wd-pos" id="gps-pos" style="left:50%;top:50%"></div>
+          </div>
+          <div class="gps-stats-row">
+            <div class="gps-stat"><div class="gps-stat-label">LATITUDE</div><div class="gps-stat-val" id="gps-lat">--</div></div>
+            <div class="gps-stat"><div class="gps-stat-label">LONGITUDE</div><div class="gps-stat-val" id="gps-lng">--</div></div>
+            <div class="gps-stat"><div class="gps-stat-label">ALTITUDE</div><div class="gps-stat-val" id="gps-alt">--</div></div>
+            <div class="gps-stat"><div class="gps-stat-label">SATELLITES</div><div class="gps-stat-val" id="gps-sats">--</div></div>
+            <div class="gps-stat"><div class="gps-stat-label">HDOP</div><div class="gps-stat-val" id="gps-hdop">--</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLOCK -->
+      <div class="view" id="view-clock">
+        <div class="clock-body">
+          <div class="clock-main" id="clk-main">00:00:00</div>
+          <div class="clock-date" id="clk-date">--- --- -- ----  UTC</div>
+          <div class="clock-sw-hint">STOPWATCH  SPACE=start/pause  R=reset</div>
+          <div class="clock-sw" id="clk-sw">00:00:00.00</div>
+        </div>
+      </div>
+
+      <!-- CALCULATOR -->
+      <div class="view" id="view-calculator">
+        <div class="calc-body">
+          <div class="calc-display">
+            <div class="calc-prev" id="calc-prev"></div>
+            <div class="calc-cur" id="calc-cur">0</div>
+          </div>
+          <div class="calc-grid" id="calc-grid-el"></div>
+        </div>
+      </div>
+
+      <!-- CALENDAR -->
+      <div class="view" id="view-calendar">
+        <div class="cal-body">
+          <div class="cal-title" id="cal-title">MONTH YYYY</div>
+          <div class="cal-dow">
+            <span class="su">SU</span><span>MO</span><span>TU</span><span>WE</span>
+            <span>TH</span><span>FR</span><span>SA</span>
+          </div>
+          <div class="cal-grid" id="cal-grid-el"></div>
+          <div class="cal-nav-row">
+            <span class="cal-nav-btn" onclick="calNav(-1)">&lt; PREV</span>
+            <span class="cal-nav-btn" onclick="calToday()">TODAY</span>
+            <span class="cal-nav-btn" onclick="calNav(1)">NEXT &gt;</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTEPAD -->
+      <div class="view" id="view-notepad">
+        <div class="iview">
+          <div class="iview-hdr"><span style="color:var(--am)">NOTEPAD</span><span style="margin-left:auto;font-size:7px;color:#003320">SD: /sd/notes/</span></div>
+          <textarea class="notepad-ta" id="notepad-ta" placeholder="Type your notes…&#10;On device: saved to /sd/notes/ on SD card.&#10;In demo: persists while tab is open."></textarea>
+          <div class="notepad-footer"><span id="notepad-ct">0</span> chars</div>
+        </div>
+      </div>
+
+      <!-- ABOUT -->
+      <div class="view" id="view-about">
+        <div class="about-body">
+          <div class="about-logo">PISCES MOON</div>
+          <div class="about-sub">OPERATING SYSTEM · P4 EDITION</div>
+          <div style="color:var(--am);font-size:9px;letter-spacing:1px">v1.2.0-alpha "Dual MCU"</div>
+          <div class="about-spec">
+            <strong>ESP32-P4</strong> dual-core RISC-V LX9 @ 360MHz · 32MB PSRAM · 16MB Flash<br>
+            <strong>ESP32-C6</strong> coprocessor · WiFi 6 / BLE 5 / 802.15.4 · Always-On Ghost Engine<br>
+            <strong>Display:</strong> 7" MIPI-DSI IPS · 1024×600 · GT911 capacitive touch<br>
+            <strong>Audio:</strong> NS4168 stereo codec · dual speakers · PDM microphone<br>
+            <strong>GPS:</strong> Beitian BN-180 P4-direct UART · NMEA 9600 baud<br>
+            <strong>Storage:</strong> MicroSD SDIO · SQLite wardrive sessions<br>
+            <strong>Modular:</strong> SX1262 / nRF24 wireless slot · PN532 NFC · T-Beam S3 peer<br>
+            <br>
+            <strong>56 apps · 7 categories · AGPL-3.0-or-later</strong><br>
+            © 2026 Eric Becker / Fluid Fortune · fluidfortune.com
+          </div>
+        </div>
+      </div>
+
+      <!-- PEER REGISTRY / BRIDGE VIEW -->
+      <div class="view" id="view-bridge">
+        <div class="bridge-body">
+          <div class="bridge-status dc" id="bridge-status">⬡ NO BRIDGE CONNECTED</div>
+          <div style="font-size:7px;color:#003320;line-height:1.6;flex-shrink:0" id="bridge-info">
+            Connect a <strong style="color:#005533">T-Deck Plus, Cardputer ADV, or T-Beam Supreme S3</strong>
+            running Pisces Bridge firmware via USB.<br>
+            Chrome / Edge only (Web Serial API). The bridge becomes a live sensor for this demo.
+          </div>
+          <div class="bridge-log" id="bridge-log"></div>
+          <button class="bridge-btn" id="bridge-btn" onclick="bridgeConnect()">⚡ CONNECT BRIDGE DEVICE</button>
+        </div>
+      </div>
+
+      <!-- PEER REGISTRY (system info view) -->
+      <div class="view" id="view-system">
+        <div class="iview">
+          <div class="iview-hdr"><span style="color:#848484">PEER REGISTRY</span><span style="margin-left:auto;font-size:7px;color:#003320">MODULAR · AUTO-DETECT</span></div>
+          <div class="peer-grid" id="peer-grid"></div>
+        </div>
+      </div>
+
+      <!-- SNAKE -->
+      <div class="view" id="view-snake">
+        <div class="game-view" style="position:relative">
+          <canvas id="snake-cv" style="display:block;background:#000;flex:1;width:100%;"></canvas>
+          <div class="game-hint">↑↓←→ MOVE · ESC QUIT</div>
+        </div>
+      </div>
+
+      <!-- TETRIS -->
+      <div class="view" id="view-tetris">
+        <div class="game-view" style="position:relative">
+          <canvas id="tet-cv" style="display:block;background:#000;flex:1;width:100%;"></canvas>
+          <div class="game-hint">←→ MOVE · ↑/Z ROTATE · ↓ SOFT DROP · ENTER PAUSE · X NEW SONG</div>
+        </div>
+      </div>
+
+      <!-- GALAGA -->
+      <div class="view" id="view-galaga">
+        <div class="game-view" style="position:relative">
+          <div class="game-banner">DEMO VERSION · Simplified formation · Full game on real device</div>
+          <canvas id="gal-cv" style="display:block;background:#000;flex:1;width:100%;"></canvas>
+          <div class="game-hint">←→ MOVE · Z FIRE · ENTER PAUSE · ESC QUIT</div>
+        </div>
+      </div>
+
+      <!-- PAC-MAN -->
+      <div class="view" id="view-pacman">
+        <div class="game-view" style="position:relative">
+          <div class="game-banner">DEMO VERSION · Simplified ghost AI · Full game on real device</div>
+          <canvas id="pac-cv" style="display:block;background:#000;flex:1;width:100%;"></canvas>
+          <div class="game-hint">↑↓←→ MOVE · ENTER PAUSE · ESC QUIT</div>
+        </div>
+      </div>
+
+      <!-- STUB / HARDWARE-ONLY -->
+      <div class="view" id="view-stub">
+        <div class="stub-body">
+          <div class="stub-icon" id="stub-icon">📡</div>
+          <div class="stub-name" id="stub-name">APP NAME</div>
+          <div class="stub-hw-tag" id="stub-tag">HARDWARE REQUIRED</div>
+          <div class="stub-detail" id="stub-detail">This app runs on the physical device.</div>
+        </div>
+      </div>
+
+    </div><!-- /screen -->
+  </div><!-- /bezel -->
+</div><!-- /chassis -->
+
+<div class="connect-strip">
+  <button class="connect-btn" id="ext-connect-btn" onclick="bridgeConnect()">⚡ CONNECT BRIDGE</button>
+  <span class="connect-status" id="ext-connect-status">T-Deck Plus · Cardputer · T-Beam S3  ·  Chrome/Edge</span>
+</div>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════
+//  PISCES MOON OS — P4 Web Demo
+//  5" form factor · 800×480 emulated display
+//  Bridge protocol: Pisces Bridge JSON over Web Serial
+//  AGPL-3.0-or-later · fluidfortune.com
+// ═══════════════════════════════════════════════════════════
+
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const KEY_LS = 'pm_gemini_key';
+const SYS_PROMPT = `You are the Gemini AI terminal inside Pisces Moon OS running on an ESP32-P4 (360MHz dual-core RISC-V) + ESP32-C6 coprocessor system — the ELECROW CrowPanel Advanced 7". The C6 runs the Ghost Engine: always-on WiFi scan, BLE scan, 802.11 promiscuous, EAPOL collection. The P4 runs the OS, LVGL UI, apps. Modular peer registry: apps query by capability not hardware. 56 apps across 7 categories. Be concise — screen is a 7" panel. Max 4 sentences unless more is requested. You can discuss the OS, embedded systems, ESP32-P4, C6 Ghost Engine, the modular peer registry, wardriving, LoRa, NFC, or general topics.`;
+
+const DEMO_RESP = [
+  {k:['hello','hi','hey'],  r:'Pisces Moon P4 v1.2.0-alpha online. ESP32-P4 at 360MHz, 32MB PSRAM. C6 Ghost Engine wardriving on dedicated silicon — not a software task, a separate MCU. 56 apps registered. What do you want to know?'},
+  {k:['ghost','engine','c6'], r:'The C6 is dedicated radio silicon. It does nothing but WiFi scan, BLE scan, 802.11 frame capture, and EAPOL collection, 100% of the time the device is powered. The P4 can play Doom or run the AI terminal — the C6 never stops. This is the architectural claim: hardware-enforced, always-on capture.'},
+  {k:['peer','registry','modular'], r:'Apps ask "is a WiFi peer available?" not "does this board have WiFi?" The peer registry answers. Plug in an SX1262 slot module → LoRa capability appears. Plug in a T-Beam Supreme S3 → secondary WiFi/BLE/LoRa. Unplug anything → capability withdraws cleanly. No reboots, no conditional compilation.'},
+  {k:['wardrive','wifi','scan'], r:'C6 wardrives on its own UART channel while the P4 runs everything else. Sessions write to /sd/sessions/session_*.db via SQLite on the P4. Fields: mac, ssid, rssi, channel, encryption, lat, lng, timestamp. WiGLE 1.4-compatible CSV export also available.'},
+  {k:['nfc'], r:'PN532 NFC reader connects to the C6 UART1 in HSU mode. The C6 handles all NFC protocol; the P4 sees structured events. Four apps: NFC Reader, NFC Clone, NFC Emulate, Amiibo. Phase 15 hardware bring-up pending.'},
+  {k:['lora','mesh','radio'], r:'Wireless slot auto-detects SX1262 or nRF24 via SPI signature probe. If empty, apps gracefully report "no radio." T-Beam Supreme S3 peer provides secondary LoRa when connected. Mesh Messenger uses Meshtastic LongFast (906.875 MHz, BW 250, SF 11, CR 4/5).'},
+  {k:['p4','esp32p4','risc'], r:'ESP32-P4 is Espressif\'s first RISC-V application processor: dual LX9 cores at up to 400MHz (clocked at 360 in our build), 32MB OPI PSRAM, MIPI-DSI output, SDIO, and a rich peripheral set. No built-in radios — that\'s by design. The C6 coprocessor handles all RF so the P4 can focus on application workloads.'},
+  {k:['bridge','serial','connect'], r:'Bridge mode: connect a T-Deck Plus, Cardputer ADV, or T-Beam Supreme S3 running Pisces Bridge firmware. JSON over USB Serial at 115200 baud. The demo switches from simulated data to live detections. Use the ⚡ CONNECT BRIDGE button below the chassis.'},
+  {k:['s3','t-deck','tdeck'], r:'The S3 version (T-Deck Plus, v1.1.x) is production-ready on real hardware. The P4 version (v1.2.0-alpha) is a complete firmware rewrite in pure C/ESP-IDF — same Ghost Engine concept, dedicated C6 hardware, 1024×600 MIPI-DSI display, modular peer registry. Hardware bring-up is the current phase.'},
+  {k:['crowpanel','elecrow','board'], r:'ELECROW CrowPanel Advanced 7" HMI — SKU DHE04107D V1.0. $46. ESP32-P4 + ESP32-C6-MINI-1 onboard, 7" 1024×600 IPS with GT911 touch, NS4168 stereo audio, PDM microphone, MicroSD SDIO, 2×12 GPIO header. The wireless slot module and GPS header are expansion points.'},
+];
+
+// ── CATEGORY + APP DATA ──────────────────────────────────
+const CATS = [
+  { id:'comms',  cls:'comms',  icon:'📡', label:'COMMS',  color:'var(--t)',  count:6,
+    apps: [
+      {n:'GPS',         fn:'gps',         hw:false},
+      {n:'WIFI',        fn:'wifi',        hw:true},
+      {n:'BLUETOOTH',   fn:'bt',          hw:true},
+      {n:'LORA VOICE',  fn:'loravoice',   hw:true},
+      {n:'MESH MSG',    fn:'mesh',        hw:true},
+      {n:'VOICE TERM',  fn:'voiceterm',   hw:true},
+    ]},
+  { id:'cyber',  cls:'cyber',  icon:'⚡', label:'CYBER',  color:'var(--r)',  count:19,
+    apps: [
+      {n:'WARDRIVE',     fn:'wardrive',    hw:false},
+      {n:'BT RADAR',     fn:'stub',        hw:true},
+      {n:'PKT SNIFF',    fn:'stub',        hw:true},
+      {n:'BEACON',       fn:'stub',        hw:true},
+      {n:'NET SCAN',     fn:'stub',        hw:true},
+      {n:'HASH TOOL',    fn:'stub',        hw:false},
+      {n:'BLE GATT',     fn:'stub',        hw:true},
+      {n:'WPA HS',       fn:'stub',        hw:true},
+      {n:'RF SPECTRM',   fn:'stub',        hw:true},
+      {n:'PROBE INTL',   fn:'stub',        hw:true},
+      {n:'PKT ANLYS',    fn:'stub',        hw:true},
+      {n:'BLE DUCKY',    fn:'stub',        hw:true},
+      {n:'USB DUCKY',    fn:'stub',        hw:true},
+      {n:'WIFI DUCKY',   fn:'stub',        hw:true},
+      {n:'NFC READER',   fn:'stub',        hw:true},
+      {n:'NFC CLONE',    fn:'stub',        hw:true},
+      {n:'NFC EMULATE',  fn:'stub',        hw:true},
+      {n:'AMIIBO',       fn:'stub',        hw:true},
+      {n:'2ND SCAN',     fn:'stub',        hw:true},
+    ]},
+  { id:'tools',  cls:'tools',  icon:'🔧', label:'TOOLS',  color:'var(--am)', count:7,
+    apps: [
+      {n:'NOTEPAD',   fn:'notepad',    hw:false},
+      {n:'CALC',      fn:'calculator', hw:false},
+      {n:'CLOCK',     fn:'clock',      hw:false},
+      {n:'CALENDAR',  fn:'calendar',   hw:false},
+      {n:'ETCH',      fn:'stub',       hw:false},
+      {n:'CAM QR',    fn:'stub',       hw:true},
+      {n:'KEYTEST',   fn:'stub',       hw:false},
+    ]},
+  { id:'games',  cls:'games',  icon:'🎮', label:'GAMES',  color:'var(--g)',   count:7,
+    apps: [
+      {n:'SNAKE',    fn:'snake',   hw:false},
+      {n:'PAC-MAN',  fn:'pacman',  hw:false},
+      {n:'GALAGA',   fn:'galaga',  hw:false},
+      {n:'TETRIS',   fn:'tetris',  hw:false},
+      {n:'CHESS',    fn:'stub',    hw:false},
+      {n:'DOOM',     fn:'stub',    hw:false},
+      {n:'SIMCITY',  fn:'stub',    hw:false},
+    ]},
+  { id:'intel',  cls:'intel',  icon:'🧠', label:'INTEL',  color:'var(--t)',   count:7,
+    apps: [
+      {n:'TERMINAL',   fn:'terminal',  hw:false},
+      {n:'GEMINI LOG', fn:'stub',      hw:false},
+      {n:'REF: MED',   fn:'stub',      hw:false},
+      {n:'REF: SURV',  fn:'stub',      hw:false},
+      {n:'BASEBALL',   fn:'stub',      hw:false},
+      {n:'TRAILS',     fn:'stub',      hw:false},
+      {n:'SSH',        fn:'stub',      hw:true},
+    ]},
+  { id:'media',  cls:'media',  icon:'🎵', label:'MEDIA',  color:'var(--mg)',  count:3,
+    apps: [
+      {n:'AUDIO PLAY', fn:'stub', hw:true},
+      {n:'RECORDER',   fn:'stub', hw:true},
+      {n:'CAMERA',     fn:'stub', hw:true},
+    ]},
+  { id:'system', cls:'system', icon:'⚙️', label:'SYSTEM', color:'#848484',   count:9,
+    apps: [
+      {n:'FILES',     fn:'stub',   hw:false},
+      {n:'FILE MGR',  fn:'stub',   hw:false},
+      {n:'ABOUT',     fn:'about',  hw:false},
+      {n:'SYS INFO',  fn:'system', hw:false},
+      {n:'μPY REPL',  fn:'stub',   hw:true},
+      {n:'ELF APPS',  fn:'stub',   hw:false},
+      {n:'GAMEPAD',   fn:'stub',   hw:true},
+      {n:'BRIDGE',    fn:'bridge', hw:false},
+      {n:'C6 FLASH',  fn:'stub',   hw:true},
+    ]},
+];
+
+const STUB_INFO = {
+  wifi:      {icon:'📶', detail:'WiFi client requires physical hardware. On the real device, the C6 handles STA/AP mode while the Ghost Engine continues wardriving.'},
+  bt:        {icon:'🔵', detail:'Bluetooth control runs on the C6 coprocessor. BLE HID host allows pairing gamepads and keyboards — tested with standard BT controllers.'},
+  loravoice: {icon:'📻', detail:'LoRa push-to-talk requires an SX1262 or nRF24 module in the wireless slot, or a T-Beam Supreme S3 peer connected over UART.'},
+  mesh:      {icon:'🕸',  detail:'Meshtastic LongFast mesh (906.875 MHz, BW 250, SF 11, CR 4/5) requires physical LoRa hardware. Peer-to-peer and network relay supported.'},
+  voiceterm: {icon:'🎙',  detail:'Voice terminal uses the NS4168 PDM microphone for input and Gemini for speech-to-text. Hardware audio required.'},
+  stub:      {icon:'⚙️',  detail:'This app runs on physical Pisces Moon P4 hardware. Connect your device or flash the firmware to experience it. github.com/FluidFortune/pisces-moon-os'},
+  bt:        {icon:'🔵', detail:'Bluetooth stack runs on C6. Requires physical hardware.'},
+  chess:     {icon:'♟',  detail:'Full chess engine with LVGL board — runs on the P4. Hardware only.'},
+  doom:      {icon:'👾', detail:'Doom runs on P4 via PrBoom port. Hardware only.'},
+  simcity:   {icon:'🏙', detail:'SimCity clone via ELF module loader — drop .elf on SD card. Hardware only.'},
+  geminilog: {icon:'📋', detail:'Persistent Gemini conversation log — stored to /sd/intel/gemini_log.db. Hardware only.'},
+  refmed:    {icon:'⚕',  detail:'Offline medical reference. Loaded from /sd/ref/med/ on the SD card. Hardware only.'},
+  refsurv:   {icon:'🏕',  detail:'Offline survival reference. Loaded from /sd/ref/surv/ on the SD card. Hardware only.'},
+  baseball:  {icon:'⚾', detail:'Live MLB scores via HTTP proxy through the C6. Requires WiFi connection on real hardware.'},
+  trails:    {icon:'🥾', detail:'Hiking POI / heat-map. GPS + WiFi required on real hardware.'},
+  ssh:       {icon:'🔐', detail:'SSH client via C6 HTTP proxy tunnel. Requires WiFi on real hardware.'},
+  audioplay: {icon:'🔊', detail:'WAV/MP3 player via NS4168 stereo codec. Hardware audio required.'},
+  recorder:  {icon:'🎙',  detail:'PDM microphone recording to /sd/media/. Hardware audio required.'},
+  camera:    {icon:'📷', detail:'CSI camera viewfinder + snapshot. Requires CSI camera module on real hardware.'},
+  camqr:     {icon:'📷', detail:'QR scanner via CSI camera + ZBar. Hardware camera required.'},
+  etch:      {icon:'✏',  detail:'Drawing canvas on the 1024×600 touchscreen. Hardware display required.'},
+  keytest:   {icon:'⌨',  detail:'Virtual keyboard test — on-screen QWERTY overlay. Hardware only.'},
+  files:     {icon:'📁', detail:'SD card file browser. Reads from /sd/ filesystem. Hardware only.'},
+  filemgr:   {icon:'📂', detail:'Full file manager with copy/move/delete. SD card required.'},
+  micropython:{icon:'🐍',detail:'MicroPython REPL via USB-Serial. Hardware only.'},
+  elfapps:   {icon:'🧩', detail:'ELF module loader — drop .elf + manifest .json on SD card. Hot-loadable apps without reflash.'},
+  gamepad:   {icon:'🎮', detail:'BLE HID host — pair any standard Bluetooth gamepad or keyboard via C6.'},
+  c6flash:   {icon:'⚡', detail:'C6 firmware flasher — select .bin from /sd/ghost/, flash via SDIO without tools.'},
+};
+
+// ── STATE ─────────────────────────────────────────────────
+let currentView = 'bios';
+let termHistory = [];
+let wdRunning = true;
+let wdWifi = 0, wdBle = 0, wdTotal = 0;
+let ghostActive = false;
+let swRun = false, swStart = 0, swElapsed = 0;
+let bridgeConnected = false;
+let serialPort = null, serialReader = null, serialWriter = null;
+let pendingCmds = {}, cmdSeq = 0;
+let deviceData = null;
+let ghostTimer = null;
+let calMonth = 0, calYear = 2026;
+let calToday_ = {};
+let _calcState = null;
+let _snake = null, _tet = null, _pac = null, _gal = null;
+
+// ── API KEY ───────────────────────────────────────────────
+function getKey() { return localStorage.getItem(KEY_LS) || ''; }
+function saveKey() {
+  const v = document.getElementById('s-key').value.trim();
+  if (!v) { setSt('Enter a key first','er'); return; }
+  if (!v.startsWith('AIza')) { setSt('Invalid — should start with AIza','er'); return; }
+  localStorage.setItem(KEY_LS, v);
+  setSt('Key saved ✓ — terminal live','ok');
+  updateGear();
+}
+function clearKey() {
+  localStorage.removeItem(KEY_LS);
+  document.getElementById('s-key').value = '';
+  setSt('Key cleared — demo mode','er');
+  updateGear();
+}
+function setSt(msg,cls) {
+  document.getElementById('s-msg').textContent = msg;
+  document.getElementById('s-st').className = 's-st '+cls;
+  document.getElementById('sdot').className = 'sdot'+(cls==='ok'?' on':'');
+}
+function updateGear() {
+  const g = document.getElementById('gear-btn');
+  const has = !!getKey();
+  g.className = 'gear-btn'+(has?' on':' pulse');
+}
+function toggleSettings() {
+  const o = document.getElementById('s-ov');
+  const open = o.classList.toggle('open');
+  if (open) {
+    const k = getKey();
+    document.getElementById('s-key').value = k||'';
+    setSt(k?'Key configured ✓':'No key — demo mode', k?'ok':'er');
+  }
+}
+
+// ── VIEW SYSTEM ───────────────────────────────────────────
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const el = document.getElementById('view-'+id);
+  if (el) { el.style.display='flex'; el.classList.add('active'); }
+  currentView = id;
+  stopAllGames();
+}
+
+function topbarClick() {
+  if (['bios','explainer','launcher'].includes(currentView)) return;
+  if (currentView === 'apps') { showView('launcher'); return; }
+  stopAllGames();
+  showView('launcher');
+}
+
+// ── BIOS ──────────────────────────────────────────────────
+const BIOS_LINES = [
+  ['0.000','ESP32-P4 RISC-V LX9','360MHz DUAL-CORE','OK'],
+  ['0.012','PSRAM OPI','32MB · 32-bit bus','OK'],
+  ['0.028','FLASH','16MB NOR','OK'],
+  ['0.041','MIPI-DSI PANEL','1024×600 IPS · GT911','OK'],
+  ['0.054','GT911 TOUCH','I2C addr 0x5D','OK'],
+  ['0.067','BACKLIGHT PWM','IO29/IO31 LEDC','OK'],
+  ['0.082','SD SDIO','FAT32 · 32GB · /sd','OK'],
+  ['0.098','GPS BN-180','UART1 IO2/IO3 9600bd','OK'],
+  ['0.112','AUDIO NS4168','I2S stereo · PDM mic','OK'],
+  ['0.130','C6 BRIDGE UART','115200bd · cJSON dispatch','OK'],
+  ['0.145','PEER REGISTRY','init · 0 peers','OK'],
+  ['0.160','C6 HANDSHAKE','ESP32-C6-MINI-1','OK'],
+  ['0.175','C6 GHOST ENGINE','wardrive_start · ble_start','OK'],
+  ['0.191','GHOST PARTITION','STUDENT MODE','OK'],
+  ['0.208','WIRELESS SLOT','probe SX1262...','NONE'],
+  ['0.224','NFC PN532','probe C6 UART1...','NONE'],
+  ['0.240','T-BEAM S3 PEER','probe UART2...','NONE'],
+  ['0.258','LVGL v9','display + indev registered','OK'],
+  ['0.274','APP REGISTRY','56 apps · 7 categories','OK'],
+  ['0.289','LAUNCHER READY','PISCES MOON P4','RDY'],
+];
+
+function runBios() {
+  const out = document.getElementById('bios-out');
+  out.innerHTML = '';
+  let delay = 300;
+  BIOS_LINES.forEach((l,i) => {
+    delay += i===0 ? 0 : 50 + Math.random()*60;
+    setTimeout(() => {
+      const d = document.createElement('div');
+      d.className = 'bl';
+      const okCls = l[3]==='OK'?'bok':l[3]==='RDY'?'bok':'ber';
+      d.innerHTML = `<span class="bt">${l[0]}</span><span class="bp">${l[1]}</span><span class="bv">${l[2]}</span><span class="${okCls}">${l[3]}</span>`;
+      out.appendChild(d);
+      out.scrollTop = out.scrollHeight;
+    }, delay);
+  });
+  setTimeout(() => showView('explainer'), delay + 400);
+}
+
+// ── EXPLAINER ─────────────────────────────────────────────
+function enterDemo() {
+  showView('launcher');
+  startClock();
+  updateTopbarTime();
+  setInterval(updateTopbarTime, 30000);
+  updateGear();
+  setTimeout(() => {
+    ghostActive = true;
+    document.getElementById('ghost-bar').classList.add('on');
+    startGhostSim();
+  }, 600);
+}
+
+// ── GHOST ENGINE SIMULATION ───────────────────────────────
+const SSIDS = [
+  'ATT-HomeWifi-2G','XFINITY_7A3F','FBI_Surveillance_Van','Pretty_Fly_4_WiFi',
+  'TellMyWifiLoveHer','not_your_network','Bill_Wi_The_Science_Fi','TP-LINK_9A2B',
+  'Linksys_00234','NETGEAR-GUEST','Spectrum-4E7A','CrowPanel-Office',
+  'P4_TestNet','DIRECT-ELECROW','Ghost_Engine_Test','SX1262_Dev',
+];
+let _ghostDots = [];
+
+function startGhostSim() {
+  ghostTimer = setInterval(() => {
+    if (!ghostActive) return;
+    const newW = 8 + Math.floor(Math.random()*24);
+    const newB = 6 + Math.floor(Math.random()*40);
+    wdWifi = newW; wdBle = newB; wdTotal += newW;
+
+    document.getElementById('ghost-txt').textContent =
+      `C6 · GHOST ENGINE · CORE 0 · DEDICATED RADIO MCU`;
+    document.getElementById('ghost-counts').textContent =
+      `W:${wdWifi} BLE:${wdBle} TOT:${wdTotal}`;
+
+    document.getElementById('sb-gps-txt').textContent =
+      `GPS ${7+Math.floor(Math.random()*3)}sat`;
+    document.getElementById('sb-c6').classList.add('on');
+
+    if (currentView === 'wardrive' && !bridgeConnected) updateWDView();
+  }, 4000);
+}
+
+function updateWDView() {
+  document.getElementById('wd-wifi').textContent = wdWifi;
+  document.getElementById('wd-ble').textContent = wdBle;
+  document.getElementById('wd-total').textContent = wdTotal + ' pts';
+  const sats = 7+Math.floor(Math.random()*4);
+  document.getElementById('wd-sats').textContent = sats;
+  document.getElementById('topbar-gps').textContent = `🛰 ${sats}`;
+
+  const lat = 34.06713 + (Math.random()-.5)*.0006;
+  const lng = -118.20405 + (Math.random()-.5)*.0008;
+  document.getElementById('wd-lat').textContent = `LAT ${lat.toFixed(5)}`;
+  document.getElementById('wd-lng').textContent = `LNG ${lng.toFixed(5)}`;
+
+  // dot on map
+  const map = document.getElementById('wd-map');
+  const dot = document.createElement('div');
+  dot.className = 'wd-dot '+(Math.random()>.4?'w':'b');
+  dot.style.left = (15+Math.random()*70)+'%';
+  dot.style.top  = (15+Math.random()*70)+'%';
+  map.appendChild(dot);
+  _ghostDots.push(dot);
+  if (_ghostDots.length > 60) {
+    map.removeChild(_ghostDots.shift());
+  }
+
+  // log
+  const panel = document.getElementById('wd-log-panel');
+  const ssid = SSIDS[Math.floor(Math.random()*SSIDS.length)];
+  const entry = document.createElement('div');
+  entry.className = 'wd-log-entry w';
+  entry.textContent = `→ ${ssid} (ch${1+Math.floor(Math.random()*13)} -${55+Math.floor(Math.random()*35)}dBm)`;
+  panel.appendChild(entry);
+  while (panel.children.length > 8) panel.removeChild(panel.children[1]);
+}
+
+// ── LAUNCHER BUILD ────────────────────────────────────────
+function buildLauncher() {
+  const g = document.getElementById('cat-grid');
+  CATS.forEach((c,i) => {
+    const d = document.createElement('div');
+    d.className = `cat-tile ${c.cls}`;
+    d.innerHTML = `
+      <div class="cat-icon">${c.icon}</div>
+      <div class="cat-label">${c.label}</div>
+      <div class="cat-count">${c.count}</div>`;
+    d.onclick = () => openCat(i);
+    g.appendChild(d);
+  });
+}
+
+function openCat(i) {
+  const c = CATS[i];
+  const lbl = document.getElementById('apps-cat-label');
+  lbl.textContent = c.label;
+  lbl.style.color = c.color;
+  const grid = document.getElementById('app-grid');
+  grid.innerHTML = '';
+  c.apps.forEach(app => {
+    const t = document.createElement('div');
+    t.className = 'app-tile'+(app.hw?' hw-only':'');
+    t.style.color = c.color;
+    t.style.borderColor = c.color+'33';
+    t.textContent = app.n;
+    t.onclick = () => launchApp(app, c);
+    grid.appendChild(t);
+  });
+  showView('apps');
+}
+
+// ── APP LAUNCH ────────────────────────────────────────────
+const STUB_NAMES = {
+  wifi:'WIFI CLIENT', bt:'BLUETOOTH', loravoice:'LORA VOICE', mesh:'MESH MESSENGER',
+  voiceterm:'VOICE TERMINAL', stub:'APP', bt:'BLUETOOTH', chess:'CHESS',
+  doom:'DOOM', simcity:'SIMCITY', geminilog:'GEMINI LOG', refmed:'REF: MEDICAL',
+  refsurv:'REF: SURVIVAL', baseball:'BASEBALL LIVE', trails:'TRAILS', ssh:'SSH CLIENT',
+  audioplay:'AUDIO PLAYER', recorder:'RECORDER', camera:'CAMERA', camqr:'CAM QR',
+  etch:'ETCH', keytest:'KEYTEST', files:'FILES', filemgr:'FILE MANAGER',
+  micropython:'μPY REPL', elfapps:'ELF APPS', gamepad:'GAMEPAD', c6flash:'C6 FLASHER',
+};
+
+function launchApp(app, cat) {
+  switch(app.fn) {
+    case 'terminal':  showView('terminal');   initTerm(); break;
+    case 'wardrive':  showView('wardrive');   initWardrive(); break;
+    case 'gps':       showView('gps');        startGPS(); break;
+    case 'clock':     showView('clock');      break;
+    case 'calculator': showView('calculator'); initCalc(); break;
+    case 'calendar':  showView('calendar');   initCalendar(); break;
+    case 'notepad':   showView('notepad');    initNotepad(); break;
+    case 'about':     showView('about');      break;
+    case 'bridge':    showView('bridge');     break;
+    case 'system':    showView('system');     buildPeerGrid(); break;
+    case 'snake':     showView('snake');      startSnake(); break;
+    case 'tetris':    showView('tetris');     startTetris(); break;
+    case 'galaga':    showView('galaga');     startGalaga(); break;
+    case 'pacman':    showView('pacman');     startPacman(); break;
+    default:
+      const info = STUB_INFO[app.fn] || STUB_INFO.stub;
+      document.getElementById('stub-icon').textContent = info.icon || '⚙️';
+      document.getElementById('stub-name').textContent = STUB_NAMES[app.fn] || app.n;
+      document.getElementById('stub-tag').textContent = app.hw ? 'HARDWARE REQUIRED' : 'COMING SOON';
+      document.getElementById('stub-detail').textContent = info.detail || STUB_INFO.stub.detail;
+      showView('stub');
+  }
+}
+
+// ── PEER REGISTRY (system view) ───────────────────────────
+const PEERS = [
+  { name:'ESP32-C6', role:'Ghost Engine Coprocessor', caps:'wifi_scan, ble_scan, 802.11 promisc, EAPOL, net_scan, rf_spectrum, wpa_hs, wifi_ducky, hid_host, gatt_central', status:'connected', always:true },
+  { name:'BN-180 GPS', role:'P4-direct NMEA UART1', caps:'gps_fix, lat, lng, alt, sats, hdop, speed', status:'connected', always:true },
+  { name:'SX1262 SLOT', role:'Wireless slot module', caps:'lora_tx, lora_rx, mesh_longfast', status:'none', always:false },
+  { name:'nRF24 SLOT', role:'Wireless slot module (alt)', caps:'nrf24_tx, nrf24_rx', status:'none', always:false },
+  { name:'PN532 NFC', role:'C6 UART1 HSU mode', caps:'nfc_read, nfc_write, nfc_emulate, amiibo', status:'none', always:false },
+  { name:'T-BEAM S3', role:'Secondary radio peer (UART2)', caps:'wifi_scan_2, ble_scan_2, lora_alt', status:'none', always:false },
+  { name:'CSI CAMERA', role:'MIPI-CSI module', caps:'viewfinder, snapshot, barcode, qr_decode', status:'none', always:false },
+  { name:'BLE HID', role:'C6 BLE central paired device', caps:'gamepad_input, keyboard_input', status:'none', always:false },
+];
+
+function buildPeerGrid() {
+  const g = document.getElementById('peer-grid');
+  g.innerHTML = '';
+  PEERS.forEach(p => {
+    const d = document.createElement('div');
+    d.className = 'peer-card'+(p.status==='connected'?' connected':' unavail');
+    const col = p.status==='connected'?'var(--g)':'#333';
+    d.innerHTML = `
+      <div class="peer-name" style="color:${col}">${p.name}</div>
+      <div class="peer-cap">${p.role}</div>
+      <div class="peer-cap" style="margin-top:3px;color:#334">${p.caps}</div>
+      <div class="peer-status">
+        <div class="sb-dot${p.status==='connected'?' on':''}"></div>
+        <span style="color:${col};font-size:7px">${p.status==='connected'?'CONNECTED':p.always?'ALWAYS-ON':'NOT DETECTED'}</span>
+      </div>`;
+    g.appendChild(d);
+  });
+}
+
+// ── WARDRIVE ──────────────────────────────────────────────
+function initWardrive() {
+  _ghostDots = [];
+  document.getElementById('wd-map').querySelectorAll('.wd-dot').forEach(d=>d.remove());
+}
+
+function toggleWardrive() {
+  wdRunning = !wdRunning;
+  const btn = document.getElementById('wd-toggle-btn');
+  btn.textContent = wdRunning ? '⏸ PAUSE' : '▶ RESUME';
+  btn.style.color = wdRunning ? 'var(--am)' : '#003320';
+}
+
+// ── GPS ───────────────────────────────────────────────────
+let gpsTimer = null;
+function startGPS() {
+  let t = 0;
+  gpsTimer = setInterval(() => {
+    if (currentView !== 'gps') { clearInterval(gpsTimer); return; }
+    if (bridgeConnected && deviceData?.gps?.valid) {
+      const g = deviceData.gps;
+      setGPSDisplay(g.lat, g.lng, Math.round(g.alt_m*3.28), g.sats, g.hdop||1.2);
+      return;
+    }
+    t += 0.04;
+    const lat = 34.06713 + Math.sin(t)*.002;
+    const lng = -118.20405 + Math.cos(t)*.003;
+    const sats = 8+Math.floor(Math.random()*3);
+    setGPSDisplay(lat, lng, 355+Math.floor(Math.random()*15), sats, (0.8+Math.random()*0.8).toFixed(1));
+    const pos = document.getElementById('gps-pos');
+    pos.style.left = (48+Math.cos(t)*20)+'%';
+    pos.style.top  = (48+Math.sin(t)*20)+'%';
+  }, 600);
+}
+function setGPSDisplay(lat,lng,alt,sats,hdop) {
+  document.getElementById('gps-lat').textContent  = lat.toFixed(5);
+  document.getElementById('gps-lng').textContent  = lng.toFixed(5);
+  document.getElementById('gps-alt').textContent  = alt+' FT';
+  document.getElementById('gps-sats').textContent = sats;
+  document.getElementById('gps-hdop').textContent = hdop;
+  document.getElementById('sb-gps-txt').textContent = `GPS ${sats}sat`;
+  document.getElementById('topbar-gps').textContent = `🛰 ${sats}`;
+}
+
+// ── CLOCK ─────────────────────────────────────────────────
+function startClock() {
+  setInterval(() => {
+    const n = new Date(), p = x=>String(x).padStart(2,'0');
+    document.getElementById('clk-main').textContent =
+      `${p(n.getUTCHours())}:${p(n.getUTCMinutes())}:${p(n.getUTCSeconds())}`;
+    const D=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    document.getElementById('clk-date').textContent =
+      `${D[n.getUTCDay()]} ${M[n.getUTCMonth()]} ${p(n.getUTCDate())} ${n.getUTCFullYear()}  UTC`;
+    if (swRun) swElapsed = Date.now()-swStart;
+    const sw=swElapsed, sh=Math.floor(sw/3600000),sm=Math.floor((sw%3600000)/60000),
+          ss=Math.floor((sw%60000)/1000),ms=Math.floor((sw%1000)/10);
+    const el=document.getElementById('clk-sw');
+    el.textContent=`${p(sh)}:${p(sm)}:${p(ss)}.${p(ms)}`;
+    el.className='clock-sw'+(swRun?' run':'');
+  }, 100);
+}
+
+function updateTopbarTime() {
+  const n=new Date(), p=x=>String(x).padStart(2,'0');
+  const t=`${p(n.getHours())}:${p(n.getMinutes())}`;
+  document.getElementById('topbar-time').textContent=t;
+  document.getElementById('sb-time2').textContent=t;
+}
+
+document.addEventListener('keydown', e => {
+  if (currentView==='clock') {
+    if (e.code==='Space') { e.preventDefault(); swRun=(!swRun); if(swRun) swStart=Date.now()-swElapsed; }
+    if (e.key==='r'||e.key==='R') { swRun=false; swElapsed=0; }
+  }
+});
+
+// ── CALCULATOR ────────────────────────────────────────────
+function initCalc() {
+  _calcState = {input:'0',val1:0,op:null,prev:''};
+  const g=document.getElementById('calc-grid-el');
+  g.innerHTML='';
+  [
+    {k:'1'},{k:'2'},{k:'3'},{k:'+',cls:'op'},
+    {k:'4'},{k:'5'},{k:'6'},{k:'-',cls:'op'},
+    {k:'7'},{k:'8'},{k:'9'},{k:'*',cls:'op'},
+    {k:'C',cls:'cl'},{k:'0'},{k:'=',cls:'eq'},{k:'/',cls:'op'},
+  ].forEach(({k,cls}) => {
+    const b=document.createElement('button');
+    b.className='calc-btn'+(cls?' '+cls:'');
+    b.textContent=k;
+    b.onclick=()=>{ calcPress(k); b.classList.add('pressed'); setTimeout(()=>b.classList.remove('pressed'),80); };
+    g.appendChild(b);
+  });
+  calcRender();
+}
+function calcPress(k) {
+  const s=_calcState; beep(700,30,'square',0.03);
+  if (/[0-9]/.test(k)) { s.input=s.input==='0'?k:s.input+k; }
+  else if (k==='C') { s.input='0';s.val1=0;s.op=null;s.prev=''; }
+  else if (k==='=') {
+    if (s.op!==null) {
+      const v2=parseFloat(s.input);
+      let r=s.val1;
+      if(s.op==='+')r+=v2; else if(s.op==='-')r-=v2;
+      else if(s.op==='*')r*=v2; else if(s.op==='/')r=v2===0?NaN:r/v2;
+      s.prev=`${fmtN(s.val1)} ${s.op} ${fmtN(v2)} =`;
+      s.input=isFinite(r)?fmtN(r):'ERR';
+      s.val1=isFinite(r)?r:0; s.op=null;
+      beep(900,80,'triangle',0.04);
+    }
+  } else { s.val1=parseFloat(s.input);s.op=k;s.prev=`${fmtN(s.val1)} ${k}`;s.input='0'; }
+  calcRender();
+}
+function fmtN(n) {
+  if(!isFinite(n))return'ERR';
+  if(n===Math.floor(n))return String(Math.floor(n));
+  return parseFloat(n.toFixed(4)).toString();
+}
+function calcRender() {
+  document.getElementById('calc-prev').textContent=_calcState.prev;
+  document.getElementById('calc-cur').textContent=_calcState.input;
+}
+document.addEventListener('keydown', e => {
+  if (currentView!=='calculator') return;
+  if(/[0-9]/.test(e.key)) calcPress(e.key);
+  else if(['+','-','*','/'].includes(e.key)) calcPress(e.key);
+  else if(e.key==='Enter'||e.key==='=') calcPress('=');
+  else if(e.key==='c'||e.key==='C'||e.key==='Escape') calcPress('C');
+  else if(e.key==='Backspace') {
+    _calcState.input=_calcState.input.length>1?_calcState.input.slice(0,-1):'0';
+    calcRender();
+  }
+});
+
+// ── CALENDAR ──────────────────────────────────────────────
+const MONTHS=['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+function initCalendar() {
+  const now=new Date();
+  calToday_={d:now.getDate(),m:now.getMonth(),y:now.getFullYear()};
+  calMonth=now.getMonth(); calYear=now.getFullYear();
+  calRender();
+}
+function calRender() {
+  document.getElementById('cal-title').textContent=`${MONTHS[calMonth]} ${calYear}`;
+  const g=document.getElementById('cal-grid-el'); g.innerHTML='';
+  const first=new Date(calYear,calMonth,1).getDay();
+  const count=new Date(calYear,calMonth+1,0).getDate();
+  for(let i=0;i<first;i++){const c=document.createElement('div');c.className='cal-cell empty';g.appendChild(c);}
+  for(let d=1;d<=count;d++){
+    const c=document.createElement('div');
+    let cls='cal-cell';
+    if((first+d-1)%7===0)cls+=' sun';
+    if(d===calToday_.d&&calMonth===calToday_.m&&calYear===calToday_.y)cls+=' today';
+    c.className=cls; c.textContent=d; g.appendChild(c);
+  }
+  const trail=(7-((first+count)%7))%7;
+  for(let i=0;i<trail;i++){const c=document.createElement('div');c.className='cal-cell empty';g.appendChild(c);}
+}
+function calNav(d) {
+  calMonth+=d;
+  if(calMonth<0){calMonth=11;calYear--;}
+  if(calMonth>11){calMonth=0;calYear++;}
+  calRender();
+}
+function calToday() { calMonth=calToday_.m; calYear=calToday_.y; calRender(); }
+document.addEventListener('keydown', e => {
+  if(currentView!=='calendar')return;
+  if(e.key==='ArrowLeft')calNav(-1);
+  if(e.key==='ArrowRight')calNav(1);
+  if(e.key==='t'||e.key==='T')calToday();
+});
+
+// ── NOTEPAD ───────────────────────────────────────────────
+function initNotepad() {
+  const ta=document.getElementById('notepad-ta');
+  document.getElementById('notepad-ct').textContent=ta.value.length;
+  ta.oninput=()=>{document.getElementById('notepad-ct').textContent=ta.value.length;};
+  setTimeout(()=>ta.focus(),50);
+}
+
+// ── TERMINAL ──────────────────────────────────────────────
+function initTerm() {
+  const o=document.getElementById('term-out');
+  const has=!!getKey();
+  document.getElementById('term-mode').textContent=bridgeConnected?'BRIDGE LIVE':has?'GEMINI LIVE':'DEMO MODE';
+  if(o.children.length===0) {
+    tl('GEMINI TERMINAL · Pisces Moon P4','s');
+    tl('','d');
+    if(bridgeConnected) { tl('Bridge device connected. Prompts route to device Gemini.','b'); }
+    else if(has) { tl('Gemini 2.0 Flash connected. Type your prompt.','s'); }
+    else {
+      tl('⚠  No Gemini key — demo mode active.','e');
+      tl('','d');
+      tl('Get a free key: aistudio.google.com/apikey','d');
+      tl('Tap ⚙ in the bottom-right corner to enter it.','d');
+    }
+    tl('','d');
+  }
+  const inp=document.getElementById('term-in');
+  inp.onkeydown=e=>{if(e.key==='Enter')termSend();};
+  setTimeout(()=>inp.focus(),80);
+}
+function tl(text,cls) {
+  const o=document.getElementById('term-out');
+  const d=document.createElement('div'); d.className=`tl ${cls}`; d.textContent=text;
+  o.appendChild(d); o.scrollTop=o.scrollHeight; return d;
+}
+async function termSend() {
+  const inp=document.getElementById('term-in');
+  const prompt=inp.value.trim(); if(!prompt)return;
+  inp.value='';
+  tl('HP0> '+prompt,'u');
+  const think=tl('C6> [routing...]','s');
+  termHistory.push({role:'user',parts:[{text:prompt}]});
+  const key=getKey();
+  if(key) {
+    try {
+      const body={
+        system_instruction:{parts:[{text:SYS_PROMPT}]},
+        contents:termHistory.slice(-20),
+        generationConfig:{maxOutputTokens:350,temperature:0.7}
+      };
+      const r=await fetch(`${GEMINI_URL}?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      const d=await r.json(); think.remove();
+      if(!r.ok){tl('C6> ERROR: '+(d.error?.message||'HTTP '+r.status),'e');return;}
+      const reply=d.candidates?.[0]?.content?.parts?.[0]?.text||'No response.';
+      termHistory.push({role:'model',parts:[{text:reply}]});
+      wrapLines('C6> ',reply); tl('','d');
+    } catch(e){think.remove();tl('C6> ERROR: '+e.message,'e');}
+  } else {
+    const low=prompt.toLowerCase();
+    const match=DEMO_RESP.find(r=>r.k.some(k=>low.includes(k)));
+    const reply=match?match.r:'Pisces Moon P4 v1.2.0-alpha. ESP32-P4 + C6 Ghost Engine. 56 apps. Add a Gemini key via ⚙ for live AI.';
+    await new Promise(r=>setTimeout(r,500+Math.random()*400));
+    think.remove(); wrapLines('C6> ',reply); tl('','d');
+    tl('[DEMO · add Gemini key via ⚙ for live AI]','d');
+  }
+}
+function wrapLines(prefix,text) {
+  const W=70;
+  const words=text.split(' '); let line=prefix;
+  words.forEach(w=>{
+    if((line+w).length>W){tl(line.trimEnd(),'a');line='     '+w+' ';}
+    else line+=w+' ';
+  });
+  if(line.trim())tl(line.trimEnd(),'a');
+}
+
+// ── AUDIO BEEP ────────────────────────────────────────────
+let _ac=null;
+function getAC(){
+  if(!_ac){try{_ac=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}
+  if(_ac&&_ac.state==='suspended')_ac.resume();
+  return _ac;
+}
+function beep(freq,dur,type,vol){
+  const ac=getAC();if(!ac)return;
+  type=type||'square';vol=vol||0.04;dur=dur||60;
+  const t0=ac.currentTime;
+  const o=ac.createOscillator();const g=ac.createGain();
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,t0);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur/1000);
+  o.connect(g).connect(ac.destination);
+  o.start(t0);o.stop(t0+dur/1000);
+}
+
+// ── TETRIS MUSIC ──────────────────────────────────────────
+function startTetrisMusic() {
+  const ac=getAC();if(!ac)return null;
+  const A=[
+    [76,4],[71,2],[72,2],[74,4],[72,2],[71,2],
+    [69,4],[69,2],[72,2],[76,4],[74,2],[72,2],
+    [71,6],[72,2],[74,4],[76,4],
+    [72,4],[69,4],[69,4],[0,4],
+    [74,4],[77,2],[81,4],[79,2],[77,2],
+    [76,6],[72,2],[76,4],[74,2],[72,2],
+    [71,4],[71,2],[72,2],[74,4],[76,4],
+    [72,4],[69,4],[69,4],[0,4],
+  ];
+  const B=[
+    [76,8],[72,8],[74,8],[71,8],
+    [72,8],[69,8],[68,8],[0,8],
+    [76,8],[72,8],[74,8],[71,8],
+    [72,4],[76,4],[81,8],[80,8],
+  ];
+  const song=[...A,...A,...B,...B];
+  const bass=[[45,4],[40,4],[45,4],[40,4],[45,4],[40,4],[45,4],[40,4],[45,4],[40,4],[45,4],[40,4],[45,4],[40,4],[45,4],[40,4],[50,4],[45,4],[50,4],[45,4],[50,4],[45,4],[50,4],[45,4],[45,4],[40,4],[45,4],[40,4],[45,4],[40,4],[45,4],[40,4]];
+  const sx=0.105;let pos=0,bp=0,stopped=false;
+  function hz(n){return 440*Math.pow(2,(n-69)/12);}
+  function pn(midi,dur,type,vol){
+    if(midi<=0)return;
+    const t0=ac.currentTime;
+    const o=ac.createOscillator();const g=ac.createGain();
+    o.type=type;o.frequency.value=hz(midi);
+    g.gain.setValueAtTime(vol,t0);
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+dur*0.9);
+    o.connect(g).connect(ac.destination);o.start(t0);o.stop(t0+dur);
+  }
+  function next(){
+    if(stopped)return;
+    const[n,d]=song[pos%song.length];pos++;
+    const dur=d*sx;
+    pn(n,dur,'square',0.03);
+    pn(bass[bp%bass.length][0],Math.min(dur,sx*4),'triangle',0.018);
+    bp+=d/4;
+    setTimeout(next,dur*1000);
+  }
+  next();
+  return{stop:()=>{stopped=true;}};
+}
+
+// ── SNAKE ─────────────────────────────────────────────────
+const SNK={COLS:50,ROWS:26,CELL:0}; // cell computed from canvas size
+function startSnake(){
+  const cv=document.getElementById('snake-cv');
+  cv.width=cv.parentElement.clientWidth||760;
+  cv.height=cv.parentElement.clientHeight||390;
+  const CELL=Math.min(Math.floor(cv.width/SNK.COLS),Math.floor(cv.height/SNK.ROWS));
+  const ox=Math.floor((cv.width-SNK.COLS*CELL)/2);
+  const oy=14;
+  _snake={cv,ctx:cv.getContext('2d'),CELL,ox,oy,
+    body:[],head:0,dir:'R',nextDir:'R',
+    score:0,hi:parseInt(localStorage.getItem('p4_snake_hi')||'0')||0,
+    food:null,stepMs:180,lastStep:performance.now(),over:false};
+  const sx=Math.floor(SNK.COLS/2),sy=Math.floor(SNK.ROWS/2);
+  for(let i=0;i<3;i++) _snake.body.push({c:sx-(2-i),r:sy});
+  _snake.head=2;
+  snakeFood();drawSnake();
+  if(window._snakeRAF)cancelAnimationFrame(window._snakeRAF);
+  window._snakeRAF=requestAnimationFrame(snakeLoop);
+}
+function snakeFood(){
+  const occ=new Set(_snake.body.map(p=>p.c+','+p.r));
+  const free=[];
+  for(let r=1;r<SNK.ROWS-1;r++) for(let c=1;c<SNK.COLS-1;c++) if(!occ.has(c+','+r)) free.push({c,r});
+  _snake.food=free.length?free[Math.floor(Math.random()*free.length)]:null;
+}
+function snakeLoop(t){
+  const s=_snake;if(!s||s.over)return;
+  if(t-s.lastStep<s.stepMs){window._snakeRAF=requestAnimationFrame(snakeLoop);return;}
+  s.lastStep=t;s.dir=s.nextDir;
+  const h=s.body[s.head];let nx=h.c,ny=h.r;
+  if(s.dir==='U')ny--;if(s.dir==='D')ny++;if(s.dir==='L')nx--;if(s.dir==='R')nx++;
+  if(nx<0||nx>=SNK.COLS||ny<0||ny>=SNK.ROWS){snakeOver();return;}
+  for(let i=0;i<s.body.length-1;i++) if(s.body[i].c===nx&&s.body[i].r===ny){snakeOver();return;}
+  const ate=s.food&&s.food.c===nx&&s.food.r===ny;
+  if(ate){s.body.push({c:nx,r:ny});s.head=s.body.length-1;s.score+=10;s.stepMs=Math.max(70,180-Math.floor(s.score/10)*7);snakeFood();beep(880,50,'square',0.05);}
+  else{for(let i=0;i<s.body.length-1;i++)s.body[i]=s.body[i+1];s.body[s.body.length-1]={c:nx,r:ny};s.head=s.body.length-1;}
+  drawSnake();window._snakeRAF=requestAnimationFrame(snakeLoop);
+}
+function drawSnake(){
+  const s=_snake;const ctx=s.ctx;const C=s.CELL;
+  ctx.fillStyle='#000';ctx.fillRect(0,0,s.cv.width,s.cv.height);
+  ctx.fillStyle='#0a1a0a';ctx.fillRect(0,0,s.cv.width,13);
+  ctx.font='8px "DM Mono"';ctx.fillStyle='var(--g,#00ff88)';
+  ctx.fillText(`SNAKE  SCORE:${s.score}  HI:${s.hi}`,6,10);
+  ctx.strokeStyle='#18c318';ctx.lineWidth=1;
+  ctx.strokeRect(s.ox+.5,s.oy+.5,SNK.COLS*C-1,SNK.ROWS*C-1);
+  for(let i=0;i<s.body.length;i++){
+    const p=s.body[i];
+    ctx.fillStyle=(i===s.head)?'#7fffff':'#00ff88';
+    ctx.fillRect(s.ox+p.c*C,s.oy+p.r*C,C-1,C-1);
+  }
+  if(s.food){ctx.fillStyle='#ff4444';ctx.fillRect(s.ox+s.food.c*C,s.oy+s.food.r*C,C-1,C-1);}
+}
+function snakeOver(){
+  const s=_snake;s.over=true;beep(120,300,'sawtooth',0.07);
+  let newHi=false;if(s.score>s.hi){s.hi=s.score;newHi=true;localStorage.setItem('p4_snake_hi',String(s.hi));}
+  drawSnake();showGameOver('view-snake',s.score,s.hi,newHi,startSnake);
+}
+document.addEventListener('keydown',e=>{
+  if(currentView!=='snake'||!_snake||_snake.over)return;
+  if(e.key==='ArrowUp'&&_snake.dir!=='D')_snake.nextDir='U';
+  if(e.key==='ArrowDown'&&_snake.dir!=='U')_snake.nextDir='D';
+  if(e.key==='ArrowLeft'&&_snake.dir!=='R')_snake.nextDir='L';
+  if(e.key==='ArrowRight'&&_snake.dir!=='L')_snake.nextDir='R';
+  if(e.key==='Escape'){stopAllGames();showView('launcher');}
+});
+
+// ── TETRIS ────────────────────────────────────────────────
+const TET={
+  BW:10,BH:20,
+  SHAPES:[[0x0F00,0x2222,0x00F0,0x4444],[0x8E00,0x6440,0x0E20,0x44C0],[0x2E00,0x4460,0x0E80,0xC440],[0x6600,0x6600,0x6600,0x6600],[0x6C00,0x4620,0x06C0,0x8C40],[0x4E00,0x4640,0x0E40,0x4C40],[0xC600,0x2640,0x0C60,0x4C80]],
+  COLORS:['#00ffff','#0000ff','#ffaa00','#ffff00','#00ff00','#ff00ff','#ff0000'],
+};
+function tetCell(type,rot,x,y){return(TET.SHAPES[type][rot&3]&(0x8000>>(y*4+x)))!==0;}
+function startTetris(){
+  const cv=document.getElementById('tet-cv');
+  cv.width=cv.parentElement.clientWidth||760;
+  cv.height=cv.parentElement.clientHeight||390;
+  const CELL=Math.min(Math.floor(cv.height/TET.BH),Math.floor((cv.width-100)/TET.BW));
+  const bx=Math.floor((cv.width-CELL*TET.BW)/2)-40;
+  _tet={cv,ctx:cv.getContext('2d'),CELL,bx,by:12,
+    board:Array.from({length:TET.BH},()=>Array(TET.BW).fill(0)),
+    cur:null,next:Math.floor(Math.random()*7),
+    score:0,lines:0,level:1,over:false,paused:false,
+    lastFall:performance.now(),lastMove:0};
+  tetSpawn();drawTetris();
+  if(window._tetMusic)window._tetMusic.stop();
+  window._tetMusic=startTetrisMusic();
+  if(window._tetRAF)cancelAnimationFrame(window._tetRAF);
+  window._tetRAF=requestAnimationFrame(tetLoop);
+}
+function tetCollides(nx,ny,nr,type){
+  for(let y=0;y<4;y++) for(let x=0;x<4;x++){
+    if(!tetCell(type,nr,x,y))continue;
+    const bx=nx+x,by=ny+y;
+    if(bx<0||bx>=TET.BW||by>=TET.BH)return true;
+    if(by>=0&&_tet.board[by][bx])return true;
+  }
+  return false;
+}
+function tetRotate(){
+  const c=_tet.cur;
+  for(const dx of[0,-1,1,-2,2]) if(!tetCollides(c.x+dx,c.y,c.rot+1,c.type)){c.x+=dx;c.rot=(c.rot+1)&3;beep(660,30,'square',0.035);return;}
+}
+function tetLock(){
+  const c=_tet.cur;
+  for(let y=0;y<4;y++) for(let x=0;x<4;x++){
+    if(!tetCell(c.type,c.rot,x,y))continue;
+    const bx=c.x+x,by=c.y+y;
+    if(by>=0&&by<TET.BH&&bx>=0&&bx<TET.BW)_tet.board[by][bx]=c.type+1;
+  }
+  beep(220,50,'square',0.035);
+  let cleared=0;
+  for(let y=TET.BH-1;y>=0;y--){
+    if(_tet.board[y].every(v=>v)){_tet.board.splice(y,1);_tet.board.unshift(Array(TET.BW).fill(0));cleared++;y++;}
+  }
+  if(cleared){const pts=[0,40,100,300,1200][cleared]*_tet.level;_tet.score+=pts;_tet.lines+=cleared;_tet.level=1+Math.floor(_tet.lines/10);beep(880,80,'triangle',0.05);}
+  tetSpawn();
+}
+function tetSpawn(){
+  _tet.cur={type:_tet.next,rot:0,x:3,y:-1};
+  _tet.next=Math.floor(Math.random()*7);
+  if(tetCollides(_tet.cur.x,_tet.cur.y+1,0,_tet.cur.type)){_tet.over=true;beep(80,600,'sawtooth',0.07);}
+}
+function tetLoop(t){
+  if(!_tet||_tet.over){if(_tet&&_tet.over)showTetOver();return;}
+  if(_tet.paused){window._tetRAF=requestAnimationFrame(tetLoop);return;}
+  const ms=Math.max(90,600-(_tet.level-1)*45);
+  if(t-_tet.lastFall>=ms){
+    const c=_tet.cur;
+    if(!tetCollides(c.x,c.y+1,c.rot,c.type))c.y++;else tetLock();
+    _tet.lastFall=t;
+  }
+  drawTetris();window._tetRAF=requestAnimationFrame(tetLoop);
+}
+function drawTetris(){
+  const ctx=_tet.ctx;const cv=_tet.cv;const C=_tet.CELL;const bx=_tet.bx;const by=_tet.by;
+  ctx.fillStyle='#000';ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#0a1a0a';ctx.fillRect(0,0,cv.width,11);
+  ctx.font='8px "DM Mono"';ctx.fillStyle='#00ff88';
+  ctx.fillText(`TETRIS  L${_tet.level}  LN:${_tet.lines}  SC:${_tet.score}`,6,8);
+  ctx.fillStyle='#050a05';ctx.fillRect(bx,by,TET.BW*C,TET.BH*C);
+  for(let y=0;y<TET.BH;y++) for(let x=0;x<TET.BW;x++){
+    const v=_tet.board[y][x];
+    if(v){ctx.fillStyle=TET.COLORS[v-1];ctx.fillRect(bx+x*C,by+y*C,C-1,C-1);}
+  }
+  if(_tet.cur&&!_tet.over){
+    const c=_tet.cur;ctx.fillStyle=TET.COLORS[c.type];
+    for(let y=0;y<4;y++) for(let x=0;x<4;x++){
+      if(tetCell(c.type,c.rot,x,y)){
+        const px=bx+(c.x+x)*C,py=by+(c.y+y)*C;
+        if(py>=by)ctx.fillRect(px,py,C-1,C-1);
+      }
+    }
+  }
+  ctx.strokeStyle='#18c318';ctx.strokeRect(bx-.5,by-.5,TET.BW*C+1,TET.BH*C+1);
+  const nx0=bx+TET.BW*C+14;
+  ctx.fillStyle='#005533';ctx.font='7px "DM Mono"';ctx.fillText('NEXT',nx0,by+10);
+  ctx.fillStyle=TET.COLORS[_tet.next];
+  for(let y=0;y<4;y++) for(let x=0;x<4;x++)
+    if(tetCell(_tet.next,0,x,y)) ctx.fillRect(nx0+x*8,by+16+y*8,7,7);
+  if(_tet.paused){
+    ctx.fillStyle='rgba(0,0,0,0.75)';ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.fillStyle='#ffcc00';ctx.font='18px "Orbitron"';
+    const t='PAUSED',tw=ctx.measureText(t).width;
+    ctx.fillText(t,(cv.width-tw)/2,cv.height/2);
+  }
+}
+function showTetOver(){
+  if(window._tetMusic){window._tetMusic.stop();window._tetMusic=null;}
+  let hi=parseInt(localStorage.getItem('p4_tet_hi')||'0')||0;
+  let newHi=false;
+  if(_tet.score>hi){hi=_tet.score;newHi=true;localStorage.setItem('p4_tet_hi',String(hi));}
+  showGameOver('view-tetris',_tet.score,hi,newHi,startTetris);
+}
+document.addEventListener('keydown',e=>{
+  if(currentView!=='tetris'||!_tet||_tet.over)return;
+  const now=performance.now();const c=_tet.cur;
+  if(e.key==='ArrowLeft'&&now-_tet.lastMove>75){if(!tetCollides(c.x-1,c.y,c.rot,c.type)){c.x--;_tet.lastMove=now;}}
+  if(e.key==='ArrowRight'&&now-_tet.lastMove>75){if(!tetCollides(c.x+1,c.y,c.rot,c.type)){c.x++;_tet.lastMove=now;}}
+  if((e.key==='ArrowUp'||e.key==='z'||e.key==='Z')&&now-_tet.lastMove>110){tetRotate();_tet.lastMove=now;}
+  if(e.key==='ArrowDown')_tet.lastFall=0;
+  if(e.key==='Enter')_tet.paused=!_tet.paused;
+  if(e.key==='Escape'){stopAllGames();showView('launcher');}
+});
+
+// ── GALAGA ────────────────────────────────────────────────
+function startGalaga(){
+  const cv=document.getElementById('gal-cv');
+  cv.width=cv.parentElement.clientWidth||760;
+  cv.height=cv.parentElement.clientHeight||390;
+  const W=cv.width,H=cv.height,SY=H-28;
+  _gal={cv,ctx:cv.getContext('2d'),W,H,SY,
+    ship:{x:W/2,w:14,h:10,speed:2.5},
+    bullets:[],eBullets:[],enemies:[],divers:[],
+    stage:1,score:0,lives:3,over:false,paused:false,
+    lastShot:0,lastDive:0,lastEShot:0,
+    fOff:0,fDir:1,
+    keys:{l:false,r:false,f:false},
+    hi:parseInt(localStorage.getItem('p4_gal_hi')||'0')||0};
+  galSpawnFormation();drawGalaga();
+  if(window._galRAF)cancelAnimationFrame(window._galRAF);
+  window._galRAF=requestAnimationFrame(galLoop);
+}
+function galSpawnFormation(){
+  _gal.enemies=[];
+  const rows=4,cols=12;
+  const sx=(_gal.W-cols*22)/2+11,sy=24;
+  const types=['#ff4444','#ff4444','#ffb8d8','#00cfff'];
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++)
+    _gal.enemies.push({x:sx+c*22,y:sy+r*16,bx:sx+c*22,by:sy+r*16,w:12,h:10,col:types[r],alive:true,pts:50+(rows-r)*30,diving:false});
+}
+function galLoop(t){
+  if(!_gal||_gal.over){if(_gal&&_gal.over)showGalOver();return;}
+  if(_gal.paused){window._galRAF=requestAnimationFrame(galLoop);return;}
+  if(_gal.keys.l)_gal.ship.x=Math.max(_gal.ship.w/2,_gal.ship.x-_gal.ship.speed);
+  if(_gal.keys.r)_gal.ship.x=Math.min(_gal.W-_gal.ship.w/2,_gal.ship.x+_gal.ship.speed);
+  if(_gal.keys.f&&t-_gal.lastShot>250&&_gal.bullets.length<4){
+    _gal.bullets.push({x:_gal.ship.x,y:_gal.SY-6,vy:-7});_gal.lastShot=t;beep(1200,30,'square',0.04);
+  }
+  for(const b of _gal.bullets)b.y+=b.vy;
+  _gal.bullets=_gal.bullets.filter(b=>b.y>0);
+  for(const b of _gal.eBullets)b.y+=b.vy;
+  _gal.eBullets=_gal.eBullets.filter(b=>b.y<_gal.H);
+  _gal.fOff+=_gal.fDir*0.45;
+  if(Math.abs(_gal.fOff)>20)_gal.fDir*=-1;
+  for(const e of _gal.enemies){if(!e.alive)continue;if(!e.diving)e.x=e.bx+_gal.fOff;}
+  if(t-_gal.lastDive>1600){
+    const alive=_gal.enemies.filter(e=>e.alive&&!e.diving);
+    if(alive.length){const e=alive[Math.floor(Math.random()*alive.length)];e.diving=true;_gal.divers.push(e);}
+    _gal.lastDive=t;
+  }
+  for(const d of _gal.divers){if(!d.alive)continue;d.y+=2;d.x+=Math.sign(_gal.ship.x-d.x)*0.5;}
+  _gal.divers=_gal.divers.filter(d=>d.alive&&d.y<_gal.H+12);
+  if(t-_gal.lastEShot>800&&_gal.enemies.some(e=>e.alive)){
+    const s=_gal.enemies.filter(e=>e.alive);const e=s[Math.floor(Math.random()*s.length)];
+    _gal.eBullets.push({x:e.x,y:e.y+e.h,vy:3.5});_gal.lastEShot=t;
+  }
+  for(const b of _gal.bullets) for(const e of _gal.enemies){
+    if(!e.alive)continue;
+    if(Math.abs(b.x-e.x)<e.w/2&&Math.abs(b.y-e.y)<e.h/2){e.alive=false;b.y=-100;_gal.score+=e.pts;beep(600,60,'sawtooth',0.04);}
+  }
+  for(const d of _gal.divers){
+    if(!d.alive)continue;
+    if(Math.abs(d.x-_gal.ship.x)<(d.w/2+_gal.ship.w/2)&&Math.abs(d.y-_gal.SY)<(d.h/2+_gal.ship.h/2)){galHit();d.alive=false;}
+  }
+  for(const eb of _gal.eBullets){
+    if(Math.abs(eb.x-_gal.ship.x)<_gal.ship.w/2&&Math.abs(eb.y-_gal.SY)<_gal.ship.h/2){galHit();eb.y=9999;}
+  }
+  if(_gal.enemies.every(e=>!e.alive)){_gal.stage++;setTimeout(()=>{if(!_gal.over)galSpawnFormation();},600);}
+  drawGalaga();window._galRAF=requestAnimationFrame(galLoop);
+}
+function galHit(){_gal.lives--;beep(120,500,'sawtooth',0.07);if(_gal.lives<=0)_gal.over=true;}
+function drawGalaga(){
+  const ctx=_gal.ctx;const cv=_gal.cv;const W=_gal.W;const H=_gal.H;
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#404';
+  for(let i=0;i<40;i++){const sx=(i*37+Math.floor(performance.now()/50))%W;const sy=(i*53)%H;ctx.fillRect(sx,sy,1,1);}
+  ctx.fillStyle='#0a1a0a';ctx.fillRect(0,0,W,14);
+  ctx.font='8px "DM Mono"';ctx.fillStyle='#00ff88';
+  ctx.fillText(`GALAGA  ST:${_gal.stage}  SC:${_gal.score}  HI:${_gal.hi}  L:${_gal.lives}`,6,10);
+  for(const e of _gal.enemies){
+    if(!e.alive)continue;
+    ctx.fillStyle=e.col;
+    ctx.fillRect(e.x-5,e.y-3,10,6);ctx.fillRect(e.x-3,e.y-5,6,2);
+    ctx.fillRect(e.x-6,e.y+2,2,2);ctx.fillRect(e.x+4,e.y+2,2,2);
+  }
+  ctx.fillStyle='#fff';
+  for(const b of _gal.bullets)ctx.fillRect(b.x-1,b.y-4,2,6);
+  ctx.fillStyle='#ff4444';
+  for(const eb of _gal.eBullets)ctx.fillRect(eb.x-1,eb.y-3,2,5);
+  const sx=_gal.ship.x,sy=_gal.SY;
+  ctx.fillStyle='#00cfff';
+  ctx.fillRect(sx-1,sy-6,2,5);ctx.fillRect(sx-6,sy-1,12,4);
+  ctx.fillRect(sx-8,sy+1,2,3);ctx.fillRect(sx+6,sy+1,2,3);
+  if(_gal.paused){
+    ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#ffcc00';ctx.font='18px "Orbitron"';
+    const t='PAUSED',tw=ctx.measureText(t).width;ctx.fillText(t,(W-tw)/2,H/2);
+  }
+}
+function showGalOver(){
+  let hi=_gal.hi,newHi=false;
+  if(_gal.score>hi){hi=_gal.score;newHi=true;localStorage.setItem('p4_gal_hi',String(hi));}
+  showGameOver('view-galaga',_gal.score,hi,newHi,startGalaga);
+}
+document.addEventListener('keydown',e=>{
+  if(currentView!=='galaga'||!_gal)return;
+  if(e.key==='ArrowLeft')_gal.keys.l=true;
+  if(e.key==='ArrowRight')_gal.keys.r=true;
+  if(e.key==='z'||e.key==='Z'||e.key===' ')_gal.keys.f=true;
+  if(e.key==='Enter')_gal.paused=!_gal.paused;
+  if(e.key==='Escape'){stopAllGames();showView('launcher');}
+});
+document.addEventListener('keyup',e=>{
+  if(!_gal)return;
+  if(e.key==='ArrowLeft')_gal.keys.l=false;
+  if(e.key==='ArrowRight')_gal.keys.r=false;
+  if(e.key==='z'||e.key==='Z'||e.key===' ')_gal.keys.f=false;
+});
+
+// ── PAC-MAN ───────────────────────────────────────────────
+const PAC_MAZE=[
+  "WWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+  "W............WW............W",
+  "W.WWWW.WWWWW.WW.WWWWW.WWWW.W",
+  "WoWWWW.WWWWW.WW.WWWWW.WWWWoW",
+  "W.WWWW.WWWWW.WW.WWWWW.WWWW.W",
+  "W..........................W",
+  "W.WWWW.WW.WWWWWWWW.WW.WWWW.W",
+  "W.WWWW.WW.WWWWWWWW.WW.WWWW.W",
+  "W......WW....WW....WW......W",
+  "WWWWWW.WWWWW WW WWWWW.WWWWWW",
+  "WWWWWW.WWWWW WW WWWWW.WWWWWW",
+  "WWWWWW.WW          WW.WWWWWW",
+  "WWWWWW.WW WWWDWWWW WW.WWWWWW",
+  "WWWWWW.WW W      W WW.WWWWWW",
+  "      .   W      W   .      ",
+  "WWWWWW.WW W      W WW.WWWWWW",
+  "WWWWWW.WW WWWWWWWW WW.WWWWWW",
+  "WWWWWW.WW          WW.WWWWWW",
+  "WWWWWW.WW WWWWWWWW WW.WWWWWW",
+  "WWWWWW.WW WWWWWWWW WW.WWWWWW",
+  "W............WW............W",
+  "W.WWWW.WWWWW.WW.WWWWW.WWWW.W",
+  "W.WWWW.WWWWW.WW.WWWWW.WWWW.W",
+  "Wo..WW................WW..oW",
+  "WWW.WW.WW.WWWWWWWW.WW.WW.WWW",
+  "WWW.WW.WW.WWWWWWWW.WW.WW.WWW",
+  "W......WW....WW....WW......W",
+  "W.WWWWWWWWWW.WW.WWWWWWWWWW.W",
+  "W.WWWWWWWWWW.WW.WWWWWWWWWW.W",
+  "W..........................W",
+  "WWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+];
+const PAC={W:28,H:31};
+function startPacman(){
+  const cv=document.getElementById('pac-cv');
+  cv.width=cv.parentElement.clientWidth||760;
+  cv.height=cv.parentElement.clientHeight||370;
+  const TS=Math.min(Math.floor(cv.width/PAC.W),Math.floor((cv.height-14)/PAC.H));
+  const ox=Math.floor((cv.width-PAC.W*TS)/2);
+  const oy=14;
+  const grid=PAC_MAZE.map(r=>r.split(''));
+  let total=0;
+  for(let r=0;r<PAC.H;r++) for(let c=0;c<PAC.W;c++) if(grid[r][c]==='.'||grid[r][c]==='o')total++;
+  _pac={cv,ctx:cv.getContext('2d'),ox,oy,TS,grid,totalDots:total,dotsLeft:total,
+    pac:{c:13.5,r:23,dir:'L',nextDir:'L',mouth:0},
+    ghosts:[
+      {c:13.5,r:11,dir:'L',col:'#ff4444',fr:0,eaten:false},
+      {c:13.5,r:14,dir:'U',col:'#ffb8d8',fr:0,eaten:false},
+      {c:11.5,r:14,dir:'U',col:'#00cfff',fr:0,eaten:false},
+      {c:15.5,r:14,dir:'U',col:'#ff8800',fr:0,eaten:false},
+    ],
+    score:0,lives:3,paused:false,over:false,win:false,
+    lastTick:performance.now(),tickMs:80,
+    hi:parseInt(localStorage.getItem('p4_pac_hi')||'0')||0};
+  drawPacman();
+  if(window._pacRAF)cancelAnimationFrame(window._pacRAF);
+  window._pacRAF=requestAnimationFrame(pacLoop);
+}
+function pacWall(c,r){
+  c=Math.round(c);r=Math.round(r);
+  if(r<0||r>=PAC.H)return true;
+  if(c<0||c>=PAC.W)return false;
+  return _pac.grid[r][c]==='W';
+}
+function pacCanMove(c,r,dir){
+  let nc=c,nr=r;
+  if(dir==='U')nr--;if(dir==='D')nr++;if(dir==='L')nc--;if(dir==='R')nc++;
+  if(nc<-.5)nc=PAC.W-1;if(nc>PAC.W-.5)nc=0;
+  return!pacWall(nc,nr);
+}
+function pacLoop(t){
+  if(!_pac||_pac.over||_pac.win){if(_pac&&(_pac.over||_pac.win))showPacOver();return;}
+  if(_pac.paused){window._pacRAF=requestAnimationFrame(pacLoop);return;}
+  if(t-_pac.lastTick<_pac.tickMs){window._pacRAF=requestAnimationFrame(pacLoop);return;}
+  _pac.lastTick=t;
+  const p=_pac.pac;
+  if(Math.abs(p.c-Math.round(p.c))<0.1&&Math.abs(p.r-Math.round(p.r))<0.1){
+    p.c=Math.round(p.c);p.r=Math.round(p.r);
+    if(pacCanMove(p.c,p.r,p.nextDir))p.dir=p.nextDir;
+    const ch=_pac.grid[p.r][p.c];
+    if(ch==='.'){_pac.grid[p.r][p.c]=' ';_pac.score+=10;_pac.dotsLeft--;beep(900,18,'square',0.025);}
+    else if(ch==='o'){_pac.grid[p.r][p.c]=' ';_pac.score+=50;_pac.dotsLeft--;beep(440,90,'square',0.04);for(const g of _pac.ghosts)if(!g.eaten)g.fr=70;}
+    if(_pac.dotsLeft<=0){_pac.win=true;return;}
+  }
+  if(pacCanMove(p.c,p.r,p.dir)){
+    if(p.dir==='U')p.r-=0.5;if(p.dir==='D')p.r+=0.5;
+    if(p.dir==='L')p.c-=0.5;if(p.dir==='R')p.c+=0.5;
+    if(p.c<-.5)p.c=PAC.W-1;if(p.c>PAC.W-.5)p.c=0;
+    p.mouth=(p.mouth+1)%4;
+  }
+  for(const g of _pac.ghosts){
+    if(Math.abs(g.c-Math.round(g.c))>0.1||Math.abs(g.r-Math.round(g.r))>0.1){
+      if(g.dir==='U')g.r-=0.5;if(g.dir==='D')g.r+=0.5;
+      if(g.dir==='L')g.c-=0.5;if(g.dir==='R')g.c+=0.5;
+      if(g.c<-.5)g.c=PAC.W-1;if(g.c>PAC.W-.5)g.c=0;
+    } else {
+      g.c=Math.round(g.c);g.r=Math.round(g.r);
+      const opts=['U','D','L','R'].filter(d=>{
+        if(d==='U'&&g.dir==='D')return false;if(d==='D'&&g.dir==='U')return false;
+        if(d==='L'&&g.dir==='R')return false;if(d==='R'&&g.dir==='L')return false;
+        return pacCanMove(g.c,g.r,d);
+      });
+      if(!opts.length){const opp={U:'D',D:'U',L:'R',R:'L'};if(pacCanMove(g.c,g.r,opp[g.dir]))g.dir=opp[g.dir];}
+      else{
+        let bestDir=opts[0],bestD=g.fr>0?-Infinity:Infinity;
+        for(const d of opts){let dc=g.c,dr=g.r;if(d==='U')dr--;if(d==='D')dr++;if(d==='L')dc--;if(d==='R')dc++;
+          const dist=Math.hypot(dc-p.c,dr-p.r);
+          if(g.fr>0){if(dist>bestD){bestD=dist;bestDir=d;}}else{if(dist<bestD){bestD=dist;bestDir=d;}}
+        }
+        g.dir=bestDir;
+      }
+      if(pacCanMove(g.c,g.r,g.dir)){
+        if(g.dir==='U')g.r-=0.5;if(g.dir==='D')g.r+=0.5;
+        if(g.dir==='L')g.c-=0.5;if(g.dir==='R')g.c+=0.5;
+      }
+    }
+    if(g.fr>0)g.fr--;
+    if(Math.abs(g.c-p.c)<0.6&&Math.abs(g.r-p.r)<0.6){
+      if(g.fr>0&&!g.eaten){g.eaten=true;g.fr=0;_pac.score+=200;beep(1200,100,'triangle',0.05);setTimeout(()=>{g.c=13.5;g.r=14;g.dir='U';g.eaten=false;},1500);}
+      else if(!g.eaten){_pac.lives--;beep(150,400,'sawtooth',0.07);if(_pac.lives<=0){_pac.over=true;return;}p.c=13.5;p.r=23;p.dir='L';p.nextDir='L';for(const gg of _pac.ghosts){gg.c=13.5;gg.r=11;gg.dir='L';}}
+    }
+  }
+  drawPacman();window._pacRAF=requestAnimationFrame(pacLoop);
+}
+function drawPacman(){
+  const ctx=_pac.ctx;const cv=_pac.cv;const TS=_pac.TS;
+  ctx.fillStyle='#000';ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#0a1a0a';ctx.fillRect(0,0,cv.width,13);
+  ctx.font='8px "DM Mono"';ctx.fillStyle='#ffe000';
+  ctx.fillText(`PAC-MAN  SC:${_pac.score}  HI:${_pac.hi}  LIVES:${'♥'.repeat(Math.max(0,_pac.lives))}`,6,10);
+  for(let r=0;r<PAC.H;r++) for(let c=0;c<PAC.W;c++){
+    const ch=_pac.grid[r][c];
+    const x=_pac.ox+c*TS,y=_pac.oy+r*TS;
+    if(ch==='W'){ctx.fillStyle='#0820F8';ctx.fillRect(x,y,TS,TS);}
+    else if(ch==='.'){ctx.fillStyle='#ffe0b0';ctx.fillRect(x+TS/2-1,y+TS/2-1,2,2);}
+    else if(ch==='o'){ctx.fillStyle='#ffe0b0';ctx.beginPath();ctx.arc(x+TS/2,y+TS/2,TS/3,0,Math.PI*2);ctx.fill();}
+    else if(ch==='D'){ctx.fillStyle='#ffb8d8';ctx.fillRect(x,y+2,TS,2);}
+  }
+  const p=_pac.pac;
+  const px=_pac.ox+p.c*TS+TS/2,py=_pac.oy+p.r*TS+TS/2;
+  ctx.fillStyle='#ffe000';ctx.beginPath();
+  const ma=(p.mouth%2===0)?0.05:0.35;
+  let sa=ma,ea=Math.PI*2-ma;
+  if(p.dir==='L'){sa+=Math.PI;ea+=Math.PI;}
+  if(p.dir==='U'){sa-=Math.PI/2;ea-=Math.PI/2;}
+  if(p.dir==='D'){sa+=Math.PI/2;ea+=Math.PI/2;}
+  ctx.arc(px,py,TS/2+1,sa,ea);ctx.lineTo(px,py);ctx.closePath();ctx.fill();
+  for(const g of _pac.ghosts){
+    if(g.eaten)continue;
+    const gx=_pac.ox+g.c*TS+TS/2,gy=_pac.oy+g.r*TS+TS/2;
+    let col=g.col;
+    if(g.fr>0)col=(g.fr<20&&Math.floor(g.fr/3)%2===0)?'#fff':'#001fff';
+    ctx.fillStyle=col;ctx.beginPath();
+    ctx.arc(gx,gy,TS/2+1,Math.PI,0);
+    ctx.lineTo(gx+TS/2+1,gy+TS/2);
+    ctx.lineTo(gx+2,gy+TS/2);ctx.lineTo(gx,gy+TS/2-2);
+    ctx.lineTo(gx-2,gy+TS/2);ctx.lineTo(gx-TS/2-1,gy+TS/2);
+    ctx.closePath();ctx.fill();
+    if(g.fr===0){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(gx-1.5,gy-1,1.2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(gx+1.5,gy-1,1.2,0,Math.PI*2);ctx.fill();}
+  }
+}
+function showPacOver(){
+  let hi=_pac.hi,newHi=false;
+  if(_pac.score>hi){hi=_pac.score;newHi=true;localStorage.setItem('p4_pac_hi',String(hi));}
+  showGameOver('view-pacman',_pac.score,hi,newHi,startPacman,_pac.win?'YOU WIN':'GAME OVER');
+}
+document.addEventListener('keydown',e=>{
+  if(currentView!=='pacman'||!_pac||_pac.over)return;
+  if(e.key==='ArrowUp')_pac.pac.nextDir='U';if(e.key==='ArrowDown')_pac.pac.nextDir='D';
+  if(e.key==='ArrowLeft')_pac.pac.nextDir='L';if(e.key==='ArrowRight')_pac.pac.nextDir='R';
+  if(e.key==='Enter')_pac.paused=!_pac.paused;
+  if(e.key==='Escape'){stopAllGames();showView('launcher');}
+});
+
+// ── GAME OVER OVERLAY ─────────────────────────────────────
+function showGameOver(viewId, score, hi, newHi, retryFn, title='GAME OVER') {
+  const ov=document.createElement('div');
+  ov.className='game-over-overlay';
+  ov.innerHTML=`
+    <div class="go-title">${title}</div>
+    <div class="go-score">Score: ${score}</div>
+    <div class="go-hi ${newHi?'new':''}">${newHi?'** NEW HIGH SCORE **':'Best: '+hi}</div>
+    <div>
+      <button class="go-btn" onclick="this.closest('.game-over-overlay').remove();(${retryFn.name})()">RETRY</button>
+      <button class="go-btn" onclick="this.closest('.game-over-overlay').remove();stopAllGames();showView('launcher')">EXIT</button>
+    </div>`;
+  document.getElementById(viewId).querySelector('.game-view').appendChild(ov);
+}
+
+function stopAllGames() {
+  if(window._snakeRAF){cancelAnimationFrame(window._snakeRAF);window._snakeRAF=null;}
+  if(window._tetRAF){cancelAnimationFrame(window._tetRAF);window._tetRAF=null;}
+  if(window._galRAF){cancelAnimationFrame(window._galRAF);window._galRAF=null;}
+  if(window._pacRAF){cancelAnimationFrame(window._pacRAF);window._pacRAF=null;}
+  if(window._tetMusic){window._tetMusic.stop();window._tetMusic=null;}
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BRIDGE — Pisces Bridge protocol (JSON over Web Serial)
+//  Compatible: T-Deck Plus, Cardputer ADV, T-Beam Supreme S3
+// ═══════════════════════════════════════════════════════════
+
+function brLog(msg, col) {
+  const log=document.getElementById('bridge-log');
+  const d=document.createElement('div');
+  d.textContent=msg;
+  if(col) d.style.color=col==='ok'?'var(--g)':col==='er'?'var(--r)':'var(--t)';
+  log.appendChild(d);
+  log.scrollTop=log.scrollHeight;
+}
+
+function setDevConnected(connected, label) {
+  const btn=document.getElementById('bridge-btn');
+  const extBtn=document.getElementById('ext-connect-btn');
+  const extSt=document.getElementById('ext-connect-status');
+  const sbDev=document.getElementById('sb-dev');
+  const sbDevTxt=document.getElementById('sb-dev-txt');
+  const badge=document.getElementById('topbar-badge');
+  const brSt=document.getElementById('bridge-status');
+  const brInfo=document.getElementById('bridge-info');
+
+  if(connected) {
+    btn.textContent='⬡ DISCONNECT BRIDGE';
+    extBtn.textContent='⬡ DISCONNECT';
+    extBtn.className='connect-btn connected';
+    extSt.textContent='✓ BRIDGE CONNECTED'; extSt.className='connect-status on';
+    sbDev.classList.add('on'); sbDevTxt.textContent='BRIDGE LIVE';
+    badge.textContent='P4 · C6 · BRIDGE'; badge.classList.add('live');
+    brSt.textContent=`◉ BRIDGE CONNECTED — ${label}`; brSt.className='bridge-status cn';
+    brInfo.textContent=`Live data from: ${label}. Wardrive, GPS, BLE detections are real.`;
+    document.getElementById('wd-mode').textContent='● BRIDGE LIVE';
+    document.getElementById('wd-mode').style.color='var(--g)';
+  } else {
+    btn.textContent='⚡ CONNECT BRIDGE DEVICE';
+    extBtn.textContent='⚡ CONNECT BRIDGE';
+    extBtn.className='connect-btn';
+    extSt.textContent='T-Deck Plus · Cardputer · T-Beam S3  ·  Chrome/Edge';
+    extSt.className='connect-status';
+    sbDev.classList.remove('on'); sbDevTxt.textContent='NO BRIDGE';
+    badge.textContent='P4 · C6'; badge.classList.remove('live');
+    brSt.textContent='⬡ NO BRIDGE CONNECTED'; brSt.className='bridge-status dc';
+    brInfo.innerHTML=`Connect a <strong style="color:#005533">T-Deck Plus, Cardputer ADV, or T-Beam Supreme S3</strong> running Pisces Bridge firmware via USB.<br>Chrome / Edge only (Web Serial API).`;
+    document.getElementById('wd-mode').textContent='● SIMULATED';
+    document.getElementById('wd-mode').style.color='var(--am)';
+  }
+}
+
+async function bridgeConnect() {
+  if (bridgeConnected) { await bridgeDisconnect(); return; }
+  if (!('serial' in navigator)) {
+    brLog('ERROR: Web Serial API not supported. Use Chrome or Edge.','er');
+    return;
+  }
+  try {
+    brLog('Requesting serial port access...');
+    const port=await navigator.serial.requestPort();
+    await port.open({baudRate:115200});
+    serialPort=port;
+    const td=new TextDecoderStream(),te=new TextEncoderStream();
+    port.readable.pipeTo(td.writable);
+    te.readable.pipeTo(port.writable);
+    serialReader=td.readable.getReader();
+    serialWriter=te.writable.getWriter();
+    bridgeConnected=true;
+    brLog('Serial port open at 115200 baud.');
+    readBridgeLoop();
+    setTimeout(async()=>{
+      const resp=await bridgeSend('ping',{},5000);
+      if(resp&&resp.ok) {
+        const d=resp.data;
+        const label=`${d.os||'Pisces Bridge'} ${d.version||''} · ${d.chip||''} · ${d.freq_mhz||'?'}MHz`;
+        setDevConnected(true,label);
+        brLog(`Connected: ${label}`,'ok');
+        brLog(`Uptime: ${d.uptime_s}s · SDK: ${d.sdk||'?'}`);
+        if(d.capabilities) brLog(`Caps: ${d.capabilities.join(', ')}`,'t');
+        pollBridge();
+        setInterval(pollBridge,5000);
+      } else {
+        brLog('Device did not respond to ping. Is Pisces Bridge firmware running?','er');
+        brLog('Flash Pisces Bridge firmware, then reconnect.','er');
+      }
+    },400);
+  } catch(e) {
+    brLog('Connection failed: '+e.message,'er');
+    bridgeConnected=false;
+    setDevConnected(false,'');
+  }
+}
+
+async function bridgeDisconnect() {
+  bridgeConnected=false;
+  setDevConnected(false,'');
+  deviceData=null;
+  try {
+    if(serialReader)await serialReader.cancel();
+    if(serialWriter)serialWriter.close();
+    if(serialPort)await serialPort.close();
+  } catch(e) {}
+  serialReader=null;serialWriter=null;serialPort=null;
+  brLog('Disconnected.');
+}
+
+async function readBridgeLoop() {
+  let buf='';
+  try {
+    while(serialReader) {
+      const{value,done}=await serialReader.read();
+      if(done)break;
+      buf+=value;
+      const lines=buf.split('\n');
+      buf=lines.pop();
+      for(const line of lines) {
+        const t=line.trim();if(!t)continue;
+        try { handleBridgeMsg(JSON.parse(t)); }
+        catch(e) { brLog('Parse err: '+t.substring(0,60)); }
+      }
+    }
+  } catch(e) {
+    if(bridgeConnected){brLog('Connection lost: '+e.message,'er');bridgeDisconnect();}
+  }
+}
+
+function handleBridgeMsg(msg) {
+  if (msg.event) {
+    switch(msg.event) {
+      case 'ready':
+        brLog(`Bridge ready: ${msg.os} ${msg.version}`,'ok');
+        if(msg.capabilities) brLog(`Caps: ${msg.capabilities.join(', ')}`,'t');
+        break;
+      case 'wifi_seen':
+        brLog(`WIFI: ${msg.ssid||'(hidden)'} [${msg.mac}] RSSI:${msg.rssi} ch:${msg.ch}`);
+        if(currentView==='wardrive'){
+          wdWifi++;
+          document.getElementById('wd-wifi').textContent=wdWifi;
+          const panel=document.getElementById('wd-log-panel');
+          const entry=document.createElement('div');
+          entry.className='wd-log-entry w';
+          entry.textContent=`→ ${msg.ssid||'(hidden)'} (ch${msg.ch} ${msg.rssi}dBm)`;
+          panel.appendChild(entry);
+          while(panel.children.length>8)panel.removeChild(panel.children[1]);
+        }
+        break;
+      case 'ble_seen':
+        brLog(`BLE: ${msg.name||'(unnamed)'} [${msg.mac}] RSSI:${msg.rssi}`);
+        wdBle++;
+        if(currentView==='wardrive') document.getElementById('wd-ble').textContent=wdBle;
+        break;
+      case 'gps':
+        if(msg.valid) {
+          brLog(`GPS: ${msg.lat.toFixed(5)},${msg.lng.toFixed(5)} (${msg.sats}sat)`,'t');
+          document.getElementById('sb-gps-txt').textContent=`GPS ${msg.sats}sat`;
+          document.getElementById('topbar-gps').textContent=`🛰 ${msg.sats}`;
+          document.getElementById('sb-gps-dot').classList.add('on');
+          if(!deviceData)deviceData={};
+          deviceData.gps={valid:true,lat:msg.lat,lng:msg.lng,alt_m:msg.alt_m||108,sats:msg.sats,hdop:msg.hdop||1.2};
+          if(currentView==='wardrive'){
+            document.getElementById('wd-lat').textContent=`LAT ${msg.lat.toFixed(5)}`;
+            document.getElementById('wd-lng').textContent=`LNG ${msg.lng.toFixed(5)}`;
+            document.getElementById('wd-sats').textContent=msg.sats;
+          }
+        }
+        break;
+      case 'lora_rx':
+        brLog(`LoRa RX: ${msg.len}B RSSI:${msg.rssi} SNR:${msg.snr}`);
+        document.getElementById('sb-lora').classList.add('on');
+        break;
+      case 'wardrive_status':
+        brLog(`Wardrive: ${msg.active?'ACTIVE':'IDLE'}`);
+        break;
+      case 'wifi_scan_done':
+        brLog(`WiFi scan: ${msg.count} networks`,'ok');
+        break;
+      case 'log':
+        brLog(`[bridge] ${msg.msg}`);
+        break;
+      case 'pong':
+        brLog(`PONG ts:${msg.ts}`);
+        break;
+      case 'disconnect':
+        brLog('Bridge exited.');bridgeDisconnect();
+        break;
+    }
+    return;
+  }
+  const seq=msg._seq;
+  if(seq!==undefined&&pendingCmds[seq]){pendingCmds[seq].resolve(msg);delete pendingCmds[seq];}
+}
+
+function bridgeSend(cmd,args={},timeoutMs=10000) {
+  if(!bridgeConnected||!serialWriter)return Promise.resolve(null);
+  const seq=++cmdSeq;
+  const msg=JSON.stringify({cmd,args,_seq:seq})+'\n';
+  return new Promise((resolve,reject)=>{
+    pendingCmds[seq]={resolve,reject};
+    serialWriter.write(msg).catch(reject);
+    setTimeout(()=>{if(pendingCmds[seq]){delete pendingCmds[seq];resolve(null);}},timeoutMs);
+  });
+}
+
+async function pollBridge() {
+  if(!bridgeConnected)return;
+  const resp=await bridgeSend('status',{},5000);
+  if(!resp||!resp.ok)return;
+  deviceData=resp.data;
+  if(resp.data.wardrive&&currentView==='wardrive'){
+    const wd=resp.data.wardrive;
+    document.getElementById('wd-wifi').textContent=wd.networks||wdWifi;
+    document.getElementById('wd-ble').textContent=wd.ble||wdBle;
+  }
+  if(resp.data.gps?.valid&&currentView==='gps') {
+    const g=resp.data.gps;
+    setGPSDisplay(g.lat,g.lng,Math.round(g.alt_m*3.28),g.sats,g.hdop||1.2);
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────
+buildLauncher();
+runBios();
+updateGear();
+
+// fix explainer display
+document.getElementById('view-explainer').style.display='none';
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&currentView!=='bios'&&currentView!=='launcher'&&currentView!=='explainer'){topbarClick();}});
+</script>
+</body>
+</html>
